@@ -401,8 +401,26 @@
 
             if (!res.ok) throw new Error(data.detail || 'Server error');
 
+            // Render Heatmap if available
+            let heatmapHtml = "";
+            if (data.heatmap_base64) {
+                heatmapHtml = `
+                <div class="mb-4 group relative cursor-zoom-in" onclick="this.classList.toggle('scale-110'); this.classList.toggle('z-50')">
+                    <p class="text-[10px] uppercase tracking-widest text-medical-blue font-bold mb-1.5 opacity-80 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-medical-blue animate-pulse"></span>
+                        Grad-CAM Diagnostic Heatmap
+                    </p>
+                    <div class="rounded-xl overflow-hidden border border-white/10 shadow-2xl ring-1 ring-white/5 transition-all duration-500 hover:ring-medical-blue/30">
+                        <img src="data:image/jpeg;base64,${data.heatmap_base64}" class="w-full h-auto object-cover transform transition-transform duration-700 hover:scale-105" alt="Diagnostic Heatmap">
+                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 to-transparent p-2">
+                            <p class="text-[9px] text-white/50 italic text-center">Highlighted areas indicate regions of high AI attention</p>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
             // Render Predictions
-            const diagnosisHtml = `<p class="font-medium text-slate-100 mb-2">Diagnostic Scan Complete.</p>` + formatPredictions(data);
+            const diagnosisHtml = heatmapHtml + `<p class="font-medium text-slate-100 mb-1">Diagnostic Scan Complete.</p>` + formatPredictions(data);
             addMsg('bot', diagnosisHtml);
 
             // Render Advice & Audio

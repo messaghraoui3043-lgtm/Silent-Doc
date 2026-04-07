@@ -61,48 +61,60 @@ def preprocess_image(image_bytes: bytes) -> np.ndarray:
     return arr.reshape(1, *IMG_SIZE, 3)
 
 # ── Prediction ────────────────────────────────────────────────────────────────
-def predict_image(image_bytes: bytes, top_k: int = 3) -> list:
+def predict_image(image_bytes: bytes, top_k: int = 3) -> dict:
     """
-    Run inference and return the top-k predictions.
+    Run inference and return the top-k predictions plus a Grad-CAM heatmap.
+    Returns a dict with 'top_k' list and 'heatmap_base64' string.
     """
     processed = preprocess_image(image_bytes)
     model     = get_model()
     probs     = model.predict(processed, verbose=0)[0]
 
     top_indices = np.argsort(probs)[::-1][:top_k]
-    results = []
+    top_k_results = []
     for rank, idx in enumerate(top_indices, start=1):
-        results.append({
+        top_k_results.append({
             "rank":       rank,
             "label":      LESION_CLASSES[idx],
             "code":       LESION_SHORT[idx],
             "confidence": float(round(float(probs[idx]) * 100, 2)),
         })
-    return results
+
+    top_idx = int(top_indices[0])
+
+    # Grad-CAM heatmap
+    heatmap_b64 = ""
+    try:
+        from models.visualization import gradcam_keras, overlay_heatmap, _pil_to_bytes
+        from PIL import Image
+        import io
+        # Find the last Conv layer name in the model
+        last_conv_name = None
+        import tensorflow as tf
+        for layer in reversed(model.layers):
+            if isinstance(layer, tf.keras.layers.Conv2D):
+                last_conv_name = layer.name
+                break
+        if last_conv_name:
+            cam = gradcam_keras(model, processed, last_conv_name, top_idx)
+            orig_pil = Image.open(io.BytesIO(image_bytes)).convert("RGB").resize((256, 256))
+            overlay = overlay_heatmap(orig_pil, cam)
+            heatmap_b64 = _pil_to_bytes(overlay)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"Skin Grad-CAM failed: {e}")
+
+    return {
+        "top_k": top_k_results,
+        "heatmap_base64": heatmap_b64,
+    }
+
 
 class SkinModelWrapper:
     def predict(self, image_path: str) -> dict:
         with open(image_path, "rb") as f:
             image_bytes = f.read()
-            
-        processed = preprocess_image(image_bytes)
-        model = get_model()
-        probs = model.predict(processed, verbose=0)[0]
-        
-        top_idx = int(np.argmax(probs))
-        top_class = LESION_CLASSES[top_idx]
-        top_confidence = float(probs[top_idx])
-        
-        all_scores = {
-            LESION_CLASSES[i]: round(float(probs[i]), 4)
-            for i in range(len(LESION_CLASSES))
-        }
-        
-        return {
-            "prediction": top_class,
-            "confidence": round(top_confidence, 4),
-            "all_scores": all_scores,
-        }
+        return predict_image(image_bytes)
 
 _cached_skin_model = None
 

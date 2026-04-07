@@ -51,42 +51,28 @@ def serve_index():
 
 @app.post("/predict/skin")
 async def predict_skin(file: UploadFile = File(...), session_id: str = Form("default")):
-    """Skin Lesion top-3 prediction using MobileNetv2"""
+    """Skin Lesion top-3 prediction using MobileNetv2 + Grad-CAM heatmap"""
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image files are accepted.")
 
     try:
         image_bytes = await file.read()
-        import numpy as np
-        from models.skin_model import preprocess_image, get_model, LESION_CLASSES, LESION_SHORT
+        from models.skin_model import predict_image
         
-        # We can either use get_skin_model().predict by saving temporarily, 
-        # or just reuse the old method. Here we use the raw method to avoid disk I/O.
-        processed = preprocess_image(image_bytes)
-        model = get_model()
-        probs = model.predict(processed, verbose=0)[0]
-        
-        top_k = 3
-        top_indices = np.argsort(probs)[::-1][:top_k]
-        results = []
-        for rank, idx in enumerate(top_indices, start=1):
-            results.append({
-                "rank": rank,
-                "label": LESION_CLASSES[idx],
-                "code": LESION_SHORT[idx],
-                "confidence": float(round(probs[idx] * 100, 2)),
-            })
+        result = predict_image(image_bytes)
+        results = result["top_k"]
+        heatmap_b64 = result.get("heatmap_base64", "")
         top_prediction = results[0]
         
-        # --- NEW GUARDRAIL ---
+        # --- GUARDRAIL ---
         if top_prediction["confidence"] < 40.0:
             return JSONResponse({
                 "predictions": results,
+                "heatmap_base64": heatmap_b64,
                 "advice_text": "Imagen غير واضحة، عاود جرب بصورة خرى.",
                 "advice_audio_base64": "",
                 "disclaimer": "⚠️ MEDICAL DISCLAIMER: This AI is a diagnostic aid only and is NOT a substitute for professional medical advice."
             })
-        # ---------------------
         
         from models.voice_model import generate_medical_advice_for_prediction
         advice_data = generate_medical_advice_for_prediction(top_prediction["label"], top_prediction["confidence"], session_id=session_id)
@@ -100,6 +86,7 @@ async def predict_skin(file: UploadFile = File(...), session_id: str = Form("def
 
     return JSONResponse({
         "predictions": results,
+        "heatmap_base64": heatmap_b64,
         "advice_text": advice_data["advice_text"],
         "advice_audio_base64": advice_data["advice_audio_base64"],
         "disclaimer": "⚠️ MEDICAL DISCLAIMER: This AI is a diagnostic aid only and is NOT a substitute for professional medical advice."
@@ -108,36 +95,20 @@ async def predict_skin(file: UploadFile = File(...), session_id: str = Form("def
 
 @app.post("/predict/eye")
 async def predict_eye(file: UploadFile = File(...)):
-    """Eye Disease prediction using OCTResnet"""
+    """Eye Disease prediction using OCTResnet + Grad-CAM heatmap"""
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image files are accepted.")
     
     try:
         image_bytes = await file.read()
-        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        
-        # Use our singleton predictor
         predictor = get_eye_model()
-        
-        # Preprocess directly via PIL Image rather than writing to disk
-        tensor = predictor.preprocess(img)
-        
-        import torch
-        logits = predictor.model(tensor)
-        probabilities = torch.softmax(logits, dim=1)[0]
-        
-        top_idx = probabilities.argmax().item()
-        top_class = predictor.classes[top_idx]
-        top_confidence = probabilities[top_idx].item()
-        
-        result = {
-            "prediction": top_class,
-            "confidence": round(top_confidence, 4)
-        }
+        result = predictor.predict(image_bytes)
         return JSONResponse(result)
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        import traceback
+        err_str = traceback.format_exc()
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}\n\n{err_str}")
 
 @app.post("/predict/voice")
 async def predict_voice(file: UploadFile = File(...), session_id: str = Form("default")):

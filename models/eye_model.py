@@ -3,13 +3,10 @@ Silent Doctor - OCT Eye Disease Inference Script
 =================================================
 This script handles inference for the ResNet18 model trained on OCT images.
 Classes: CNV, DME, DRUSEN, Normal
-
-Usage:
-    predictor = EyeDiseasePredictor("OCTResnet.pth")
-    result = predictor.predict("image.jpg")
 """
 
 import sys
+import io
 import torch
 import torch.nn as nn
 from torchvision import models
@@ -78,8 +75,12 @@ class EyeDiseasePredictor:
 
     @torch.no_grad()
     def predict(self, image_source) -> dict:
+        """Accepts a file path, file-like object, or raw bytes."""
         try:
-            img = Image.open(image_source)
+            if isinstance(image_source, bytes):
+                img = Image.open(io.BytesIO(image_source))
+            else:
+                img = Image.open(image_source)
         except Exception as e:
             logger.error(f"Failed to open image: {e}")
             raise ValueError(f"Invalid image source provided: {e}")
@@ -92,9 +93,30 @@ class EyeDiseasePredictor:
         top_class = self.classes[top_idx]
         top_confidence = probabilities[top_idx].item()
         
+        # Grad-CAM heatmap
+        heatmap_b64 = ""
+        try:
+            from models.visualization import gradcam_pytorch, overlay_heatmap, _pil_to_bytes
+            # Re-run with grad tracking (no_grad context disabled for this block)
+            tensor_grad = self.preprocess(img).requires_grad_(True)
+            with torch.enable_grad():
+                target_layer = self.model.network.layer4[-1]
+                cam = gradcam_pytorch(self.model, tensor_grad, target_layer, top_idx)
+            orig_rgb = img.convert("RGB").resize((256, 256))
+            overlay = overlay_heatmap(orig_rgb, cam)
+            heatmap_b64 = _pil_to_bytes(overlay)
+        except Exception as e:
+            logger.warning(f"Grad-CAM generation failed: {e}")
+
         return {
-            "prediction": top_class,
-            "confidence": round(top_confidence, 4)
+            "predictions": [
+                {
+                    "rank": 1,
+                    "label": top_class,
+                    "confidence": round(top_confidence * 100, 2)
+                }
+            ],
+            "heatmap_base64": heatmap_b64
         }
 
 _cached_eye_model = None
