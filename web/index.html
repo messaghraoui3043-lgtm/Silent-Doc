@@ -490,31 +490,84 @@
         try {
             const formData = new FormData();
             formData.append('file', audioBlob, 'record.webm');
-            formData.append('session_id', sessionId);
+            formData.append('session_id', 'streaming-session'); // Forced deterministic ID for streaming demo
 
             const res = await fetch(apiUrl, { method: 'POST', body: formData });
-            const data = await res.json();
+            if (!res.ok) throw new Error("Server Error: " + res.statusText);
 
-            if (!res.ok) throw new Error(data.detail || 'Server error');
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let buffer = "";
 
-            // Replace temp user text with actual transcribed text
-            if (data.user_text && data.user_text !== "(No speech detected)") {
-                const bubbleContent = temporaryUserBubble.querySelector('.bg-medical-blue');
-                if (bubbleContent) {
-                    bubbleContent.innerHTML = `<span class="italic text-white/80 opacity-90 font-light pr-1 text-lg">"</span>${data.user_text}<span class="italic text-white/80 opacity-90 font-light pl-1 text-lg">"</span>`;
+            let botBubbleContent = null;
+            let audioContext = new (window.AudioContext || window.webkitAudioContext)({sampleRate: 16000});
+            let nextPlayTime = 0;
+
+            const playAudioChunk = async (base64Chunk) => {
+                try {
+                    const binStr = atob(base64Chunk);
+                    const len = binStr.length;
+                    
+                    const floats = new Float32Array(len / 2);
+                    for (let i = 0; i < len / 2; i++) {
+                        const lsb = binStr.charCodeAt(i * 2);
+                        const msb = binStr.charCodeAt(i * 2 + 1);
+                        let int16 = (msb << 8) | lsb;
+                        if (int16 >= 0x8000) int16 -= 0x10000;
+                        floats[i] = int16 / 0x8000;
+                    }
+                    
+                    const audioBuffer = audioContext.createBuffer(1, floats.length, 16000);
+                    audioBuffer.getChannelData(0).set(floats);
+                    
+                    const source = audioContext.createBufferSource();
+                    source.buffer = audioBuffer;
+                    source.connect(audioContext.destination);
+                    
+                    if (nextPlayTime === 0) {
+                        // First chunk jitter buffer (300ms)
+                        nextPlayTime = audioContext.currentTime + 0.3;
+                    } else if (nextPlayTime < audioContext.currentTime) {
+                        nextPlayTime = audioContext.currentTime + 0.1;
+                    }
+                    
+                    source.start(nextPlayTime);
+                    nextPlayTime += audioBuffer.duration;
+                } catch(err) {
+                    console.error("Audio chunk decode error:", err);
                 }
-            } else {
-                const bubbleContent = temporaryUserBubble.querySelector('.bg-medical-blue');
-                if (bubbleContent) bubbleContent.innerHTML = `<span class="text-white/60 italic">(No speech detected)</span>`;
-            }
+            };
 
-            // Render Bot Reply
-            addMsg('bot', `<div class="text-slate-200">${data.doctor_reply}</div>`);
-            
-            // Play Audio Response
-            if (data.audio_base64) {
-                const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
-                audio.play();
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n\n');
+                buffer = lines.pop();
+
+                for (let line of lines) {
+                    if (line.startsWith("data: ")) {
+                        const dataStr = line.substring(6);
+                        try {
+                            const data = JSON.parse(dataStr);
+                            
+                            if (data.event === 'text') {
+                                const tBubble = temporaryUserBubble.querySelector('.bg-medical-blue');
+                                if (tBubble && data.user_text && data.user_text !== "(No speech detected)") {
+                                    tBubble.innerHTML = `<span class="italic text-white/80 opacity-90 font-light pr-1 text-lg">"</span>${data.user_text}<span class="italic text-white/80 opacity-90 font-light pl-1 text-lg">"</span>`;
+                                } else if (tBubble) {
+                                    tBubble.innerHTML = `<span class="text-white/60 italic">(No speech detected)</span>`;
+                                }
+                                botBubbleContent = addMsg('bot', `<div class="text-slate-200">${data.doctor_reply}</div>`);
+                            } else if (data.event === 'audio') {
+                                await playAudioChunk(data.chunk);
+                            }
+                        } catch (e) {
+                            console.error("JSON parse error on chunk: ", dataStr, e);
+                        }
+                    }
+                }
             }
         } catch (err) {
             addMsg('bot', `<span class="text-red-400 font-medium">Error:</span> <span class="text-slate-300 block">${err.message}</span>`);

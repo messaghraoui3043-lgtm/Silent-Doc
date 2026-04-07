@@ -41,12 +41,13 @@ app.add_middleware(
 # Mount the static web interface
 app.mount("/web", StaticFiles(directory=os.path.join(str(Path(__file__).resolve().parent.parent), "web"), html=True), name="web")
 
+from fastapi.responses import HTMLResponse
+
 @app.get("/")
-def health_check():
-    return {
-        "status": "online", 
-        "message": "Silent Doctor API is running. Available endpoints: /predict/skin, /predict/eye"
-    }
+def serve_index():
+    html_path = os.path.join(str(Path(__file__).resolve().parent.parent), "web", "index.html")
+    with open(html_path, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
 
 @app.post("/predict/skin")
 async def predict_skin(file: UploadFile = File(...), session_id: str = Form("default")):
@@ -147,9 +148,9 @@ async def predict_voice(file: UploadFile = File(...), session_id: str = Form("de
     
     try:
         audio_bytes = await file.read()
-        from models.voice_model import process_voice_consultation
-        result = process_voice_consultation(audio_bytes, session_id=session_id)
-        return JSONResponse(result)
+        from fastapi.responses import StreamingResponse
+        from models.voice_model import process_voice_consultation_stream
+        return StreamingResponse(process_voice_consultation_stream(audio_bytes, session_id=session_id), media_type="text/event-stream")
         
     except Exception as e:
         import traceback
@@ -159,4 +160,4 @@ async def predict_voice(file: UploadFile = File(...), session_id: str = Form("de
         raise HTTPException(status_code=500, detail=f"Voice processing failed: {str(e)}\n\n{err_str}")
 
 if __name__ == '__main__':
-    uvicorn.run("api.main:app", host='0.0.0.0', port=5000, reload=True)
+    uvicorn.run("api.main:app", host='127.0.0.1', port=5000, reload=True)
