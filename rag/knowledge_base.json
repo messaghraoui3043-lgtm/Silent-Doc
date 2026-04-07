@@ -1,0 +1,92 @@
+{
+  "diseases": [
+    {
+      "label": "Melanoma",
+      "name_darija": "ميلانوما (سرطان جلد خطير)",
+      "description": "Melanoma is the most serious type of skin cancer. It develops in the cells (melanocytes) that produce melanin—the pigment that gives your skin its color.",
+      "symptoms": "A change in an existing mole or the development of a new, unusual-looking growth on the skin.",
+      "advice": "See a dermatologist immediately. Do not delay. This requires specialized biopsy and treatment.",
+      "moroccan_context": "Daba darori khassek tmchi l tbib dyal jled f akrab wakt. Melnouma hya as3ab naw3 dyal saratan l jeld."
+    },
+    {
+      "label": "Melanocytic nevus",
+      "name_darija": "الشامة (خالة)",
+      "description": "A melanocytic nevus (also known as a mole) is a common, noncancerous skin growth of pigment-producing cells.",
+      "symptoms": "Small, dark brown spots caused by clusters of pigmented cells.",
+      "advice": "Usually harmless. However, monitor for changes in size, shape, or color (ABCDE criteria).",
+      "moroccan_context": "Hadi ghir chama 3adiya. Walakin dima bka t9lebha ila bdat t9bare awla tbedel loun dyalha."
+    },
+    {
+      "label": "Basal cell carcinoma",
+      "name_darija": "سرطان الخلايا القاعدية",
+      "description": "Basal cell carcinoma (BCC) is a type of skin cancer that begins in the basal cells. It often appears as a slightly transparent bump on the skin.",
+      "symptoms": "A pearly white, skin-colored, or pink bump that is translucent, meaning you can see a bit through the surface.",
+      "advice": "Highly treatable and rarely spreads, but needs surgical removal to prevent local tissue damage.",
+      "moroccan_context": "Hada naw3 dyal saratan l jeld li kikon ghaliban mzyan ila t3alej bekri. Khasso l'operation bach ithiyed."
+    },
+    {
+      "label": "Actinic keratosis",
+      "name_darija": "التقران السفعي (بقع الشمس)",
+      "description": "Actinic keratosis (AK) is a rough, scaly patch on your skin that develops from years of exposure to the sun.",
+      "symptoms": "Rough, dry, or scaly patch of skin, usually less than 1 inch (2.5 centimeters) in diameter.",
+      "advice": "Considered precancerous. If left untreated, it can develop into squamous cell carcinoma.",
+      "moroccan_context": "Hadi b9a3 sghira kadji mn lberd awla chemch. Darori t3alejha hit t9der tbedel l mard khayeb m3a lwa9t."
+    },
+    {
+      "label": "Benign keratosis-like lesions",
+      "name_darija": "تأليل أو آفات جلدية حميدة",
+      "description": "These are noncancerous skin growths that can include seborrheic keratoses, which appear as waxy, scaly, and slightly elevated growths.",
+      "symptoms": "Waxy or wart-like growths that look like they've been pasted on the skin.",
+      "advice": "Benign and harmless. No treatment is medically necessary unless for cosmetic reasons.",
+      "moroccan_context": "Hadi afa jildiya hamida, ma3ndha tati khoutoura. Ma khassekch tkhli3 mnha."
+    },
+    {
+      "label": "Dermatofibroma",
+      "name_darija": "ورم ليفي جلدي",
+      "description": "Dermatofibromas are common noncancerous (benign) skin growths. They are typically firm, red-to-brown bumps.",
+      "symptoms": "A firm bump that can sometimes feel like a pea under the skin.",
+      "advice": "Harmless. Usually ignored unless it causes pain or irritation.",
+      "moroccan_context": "Hada kora sghira 9asha7 f l jeld. Hamida o ma fiha hta khoutoura."
+    },
+    {
+      "label": "Vascular lesions",
+      "name_darija": "آفات وعائية (وحمات دموية)",
+      "description": "Vascular lesions are relatively common abnormalities of the skin and underlying tissues, more commonly known as birthmarks or spider veins.",
+      "symptoms": "Red, purple, or blue marks caused by abnormal blood vessels.",
+      "advice": "Usually benign. Can be treated with laser for cosmetic reasons.",
+      "moroccan_context": "Hadi wahmat damawiya. Ghaliban hamida o katkon mn lwilada awla katban m3a lkber."
+    },
+    {
+      "label": "CNV",
+      "name_darija": "تنكس بقعي (نيماتودا الأوعية الدموية)",
+      "description": "Choroidal Neovascularization (CNV) is the creation of new blood vessels in the choroid layer of the eye, often associated with age-related macular degeneration.",
+      "symptoms": "Blurred vision, distorted vision, or a dark spot in the central vision.",
+      "advice": "Urgent consultation with an ophthalmologist is required. Treatments include anti-VEGF injections.",
+      "moroccan_context": "Hada mard f l'عين ki aser 3la choufa dyalk. Khassek tmchi l tbib dyal l'3inine darori bach tdir t9ari."
+    },
+    {
+      "label": "DME",
+      "name_darija": "وذمة بقعية سكرية",
+      "description": "Diabetic Macular Edema (DME) is an accumulation of fluid in the macula part of the retina that controls our most detailed vision.",
+      "symptoms": "Blurred or wavy vision near or in the center of the field of vision.",
+      "advice": "Control your blood sugar levels strictly. Regular eye exams are critical for diabetic patients.",
+      "moroccan_context": "Hada mard ki dji l nass li fihom sokar. Darori tkon mtab3 mzyan m3a tbib dyal sokar o dyal l'3inine."
+    },
+    {
+      "label": "DRUSEN",
+      "name_darija": "بروات (رواسب تحت الشبكية)",
+      "description": "Drusen are yellow deposits under the retina. They are made up of lipids and proteins and are common as people age.",
+      "symptoms": "Usually asymptomatic until they grow larger, leading to vision distortion.",
+      "advice": "Monitor vision using an Amsler grid. Regular check-ups to detect early stages of Macular Degeneration.",
+      "moroccan_context": "Hadi b9a3 sghira sffra katban mn t7et chabakiya. Katji m3a l kber f l3oumre."
+    },
+    {
+      "label": "Normal",
+      "name_darija": "حالة عادية",
+      "description": "The retinal tissue appears healthy with no visible signs of CNV, DME, or Drusen.",
+      "symptoms": "Clear, unobstructed vision suitable for the patient's age.",
+      "advice": "Maintain healthy lifestyle and routine annual eye checkups.",
+      "moroccan_context": "Kolchi mzyan, l'3in dyalk bayna n9iya o ma fiha walou."
+    }
+  ]
+}

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Doctor – Premium AI Diagnostic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        medical: {
+                            superdark: '#0B1121',
+                            dark: '#151E32',
+                            card: '#1C263D',
+                            blue: '#3B82F6',
+                            purple: '#8B5CF6',
+                            accent: '#6366F1'
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+        
+        .glass-panel {
+            background: rgba(28, 38, 61, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.02);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .glass-panel:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-medical-superdark text-slate-200 min-h-screen flex flex-col font-sans selection:bg-medical-purple selection:text-white">
+
+<!-- Header -->
+<header class="glass-panel sticky top-0 z-50 flex items-center justify-between px-6 py-4 shadow-md">
+    <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-medical-blue to-medical-purple flex items-center justify-center text-xl shadow-lg shadow-medical-purple/20">
+            🩺
+        </div>
+        <h1 class="text-xl font-bold tracking-tight text-white">Silent Doctor</h1>
+    </div>
+    <div class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-2">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        AI Powered
+    </div>
+</header>
+
+<main class="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8 flex flex-col md:flex-row gap-6">
+    
+    <!-- Left Column: Upload -->
+    <aside class="w-full md:w-96 flex flex-col gap-6">
+        <div class="glass-panel p-6 rounded-2xl flex flex-col gap-5">
+            <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase">Diagnostic Image</h2>
+            
+            <!-- Dropzone -->
+            <div id="drop-zone" class="border-2 border-dashed border-slate-600 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-medical-blue hover:bg-medical-blue/5 transition-all duration-300 group">
+                <div class="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">🔬</div>
+                <p class="text-sm text-center text-slate-400">
+                    <span class="font-semibold text-medical-blue group-hover:text-medical-purple transition-colors">Click to browse</span> or drag & drop<br>
+                    <span class="text-xs opacity-70">JPG, PNG, WebP</span>
+                </p>
+                <input type="file" id="file-input" accept="image/*" class="hidden" />
+            </div>
+
+            <!-- Preview -->
+            <div id="preview-wrap" class="hidden flex-col gap-3">
+                <div class="relative rounded-xl overflow-hidden border border-slate-600 group">
+                    <img id="preview-img" src="" alt="Preview" class="w-full object-cover max-h-56" />
+                    <!-- Laser Scanner Element -->
+                    <div id="laser-scanner" class="hidden absolute top-0 left-0 w-full h-1 bg-medical-blue shadow-[0_0_15px_3px_rgba(59,130,246,0.8)] z-10"></div>
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                        <button id="clear-btn" class="bg-red-500/80 hover:bg-red-500 text-white p-2 rounded-full backdrop-blur-sm transition-all shadow-lg transform hover:scale-105">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-xs text-center text-slate-400 font-medium truncate" id="file-info"></p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col gap-3 mt-2">
+                <button id="analyse-btn" disabled class="w-full relative flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-medical-blue to-medical-purple text-white font-semibold transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-medical-blue/20">
+                    <span id="analyse-icon">✨</span>
+                    <span id="analyse-text">Analyse Image</span>
+                    <svg id="analyse-loader" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </button>
+                </button>
+            </div>
+        </div>
+
+        <div class="glass-panel p-5 rounded-2xl flex flex-col gap-3">
+            <h2 class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Configuration</h2>
+            <div class="flex flex-col gap-1.5">
+                <label for="api-url" class="text-xs text-slate-400">API Endpoint</label>
+                <input type="text" id="api-url" value="http://localhost:5000/predict/skin" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-medical-purple focus:ring-1 focus:ring-medical-purple transition-all" />
+            </div>
+        </div>
+    </aside>
+
+    <!-- Right Column: Chat -->
+    <section class="flex-1 glass-panel rounded-2xl flex flex-col h-[calc(100vh-160px)] md:h-auto overflow-hidden shadow-xl border border-slate-700/50">
+        <!-- Chat Header -->
+        <div class="px-6 py-4 border-b border-slate-700/50 bg-slate-800/40 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div class="w-8 h-8 rounded-full bg-medical-card border border-medical-blue/30 flex items-center justify-center text-sm">🤖</div>
+                    <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-slate-800"></div>
+                </div>
+                <div>
+                    <h3 class="font-medium text-slate-200 text-sm">Dr. Silent</h3>
+                    <p class="text-[10px] text-slate-400">Virtual Medical Assistant</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="messages" class="flex-1 overflow-y-auto p-6 flex flex-col gap-6 scroll-smooth">
+            <div id="welcome-state" class="flex-1 flex flex-col items-center justify-center gap-4 text-center text-slate-400 h-full">
+                <div class="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center text-3xl border border-slate-700/50 mb-2">🌿</div>
+                <h2 class="text-xl font-medium text-slate-200">Welcome to your Consultation</h2>
+                <p class="text-sm max-w-sm leading-relaxed">Upload a skin lesion image on the left and click <strong class="text-medical-blue font-medium">Analyse Image</strong>, or use the <strong class="text-medical-purple font-medium">Voice Consultation</strong> to speak in Darija.</p>
+        </div>
+        </div>
+
+        <!-- Chat Footer (Voice Input Dock) -->
+        <div class="p-4 border-t border-slate-700/50 bg-slate-800/40 backdrop-blur-md">
+            <div class="relative flex items-center w-full bg-medical-superdark/60 rounded-2xl border border-slate-600/50 focus-within:border-medical-purple/50 focus-within:shadow-[0_0_15px_rgba(139,92,246,0.1)] transition-all">
+                <div class="flex-1 px-4 py-3 text-sm text-slate-400 italic cursor-not-allowed select-none">
+                    Voice chat initialized... tap mic to speak in Darija.
+                </div>
+                <div class="absolute right-2 flex items-center">
+                    <button id="record-btn" class="relative group flex items-center justify-center w-10 h-10 rounded-full bg-medical-blue/20 text-medical-blue hover:text-white hover:bg-medical-blue border border-medical-blue/30 transition-all duration-300">
+                        <span id="record-icon" class="text-lg transition-transform duration-300 group-hover:scale-110">🎤</span>
+                        <!-- Voice Loader -->
+                        <svg id="voice-loader" class="hidden absolute animate-spin h-6 w-6 text-medical-purple" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </button>
+                    <span id="record-text" class="absolute -top-8 right-0 text-[10px] bg-slate-800 px-2 py-1 rounded text-slate-300 font-medium tracking-wide uppercase opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Voice Consult</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer class="mt-auto py-4 text-center text-xs text-slate-500 border-t border-slate-800/80">
+    Silent Doctor · AI Diagnostic Aid · Not a substitute for professional medical advice
+</footer>
+
+<script>
+    // DOM Elements
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const previewWrap = document.getElementById('preview-wrap');
+    const previewImg = document.getElementById('preview-img');
+    const fileInfoEl = document.getElementById('file-info');
+    const analyseBtn = document.getElementById('analyse-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const recordBtn = document.getElementById('record-btn');
+    const apiUrlInput = document.getElementById('api-url');
+    const messagesEl = document.getElementById('messages');
+    const welcomeState = document.getElementById('welcome-state');
+
+    // UI State Elements
+    const analyseText = document.getElementById('analyse-text');
+    const analyseIcon = document.getElementById('analyse-icon');
+    const analyseLoader = document.getElementById('analyse-loader');
+    const laserScanner = document.getElementById('laser-scanner');
+
+    const recordText = document.getElementById('record-text');
+    const recordIcon = document.getElementById('record-icon');
+    const voiceLoader = document.getElementById('voice-loader');
+
+    // Global Session
+    const sessionId = Date.now().toString();
+    let selectedFile = null;
+
+    /* ── Utilities ─────────────────────────────────────── */
+    function now() {
+        return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function removeWelcome() {
+        if (welcomeState && welcomeState.parentNode) {
+            welcomeState.remove();
+        }
+    }
+
+    /* ── Chat Rendering ─────────────────────────────────────── */
+    function addMsg(role, content) {
+        removeWelcome();
+        const msgWrapper = document.createElement('div');
+        
+        if (role === 'user') {
+            msgWrapper.className = "flex gap-3 w-full justify-end animate-[slideInRight_0.3s_ease-out]";
+            msgWrapper.innerHTML = `
+                <div class="flex flex-col gap-1 items-end max-w-[80%] md:max-w-[70%]">
+                    <div class="bg-medical-blue text-white px-4 py-3 rounded-2xl rounded-tr-sm shadow-sm text-sm leading-relaxed">
+                        ${content}
+                    </div>
+                    <span class="text-[10px] text-slate-500 px-1">${now()}</span>
+                </div>
+                <div class="w-8 h-8 rounded-full bg-slate-700 flex-shrink-0 flex items-center justify-center text-xs overflow-hidden border border-slate-600 shadow-sm">👤</div>
+            `;
+        } else {
+            msgWrapper.className = "flex gap-3 w-full justify-start animate-[slideInLeft_0.3s_ease-out]";
+            msgWrapper.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-medical-blue to-medical-purple flex-shrink-0 flex items-center justify-center text-xs shadow-md border border-medical-purple/30">🤖</div>
+                <div class="flex flex-col gap-1 items-start max-w-[88%] md:max-w-[75%]">
+                    <div class="bg-medical-card border border-slate-700 text-slate-200 px-5 py-4 rounded-2xl rounded-tl-sm shadow-sm text-sm leading-relaxed">
+                        ${content}
+                    </div>
+                    <span class="text-[10px] text-slate-500 px-1">${now()}</span>
+                </div>
+            `;
+        }
+
+        messagesEl.appendChild(msgWrapper);
+        scrollToBottom();
+        return msgWrapper;
+    }
+
+    function scrollToBottom() {
+        // slight delay to allow rendering
+        setTimeout(() => {
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }, 10);
+    }
+
+    function formatPredictions(data) {
+        const { predictions, disclaimer } = data;
+        let phtml = '<div class="flex flex-col gap-2.5 mt-3">';
+        predictions.forEach(p => {
+            let colorCls, bgCls;
+            
+            // Smart Parsing for Colors
+            const rawLabel = p.label.toLowerCase();
+            const dangerWords = ["melanoma", "carcinoma", "malignant"];
+            const safeWords = ["benign", "nevus", "normal"];
+            
+            if (dangerWords.some(w => rawLabel.includes(w))) {
+                colorCls = "bg-red-500"; bgCls = "bg-red-500/10 border-red-500/30";
+            } else if (safeWords.some(w => rawLabel.includes(w))) {
+                colorCls = "bg-emerald-500"; bgCls = "bg-emerald-500/10 border-emerald-500/30";
+            } else if (p.rank === 1) { 
+                colorCls = "bg-medical-blue"; bgCls = "bg-medical-blue/10 border-medical-blue/30"; 
+            } else { 
+                colorCls = "bg-slate-500"; bgCls = "bg-slate-800 border-slate-700"; 
+            }
+
+            phtml += `
+            <div class="flex items-center gap-3 p-3 rounded-xl border ${bgCls}">
+                <div class="flex items-center justify-center w-6 h-6 rounded-full ${colorCls} text-white font-bold text-xs flex-shrink-0 shadow-sm">#${p.rank}</div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-medium text-slate-200 text-sm truncate">${p.label}</span>
+                        <span class="font-bold text-slate-300 text-xs ml-2">${p.confidence}%</span>
+                    </div>
+                    <div class="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                        <div class="bar-fill h-full ${colorCls} rounded-full transition-all duration-1000 ease-out" style="width: 0%" data-target="${p.confidence}%"></div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        phtml += '</div>';
+        phtml += `<div class="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500/90 text-xs leading-relaxed"><span class="font-semibold text-amber-500 flex items-center gap-1.5 mb-1"><svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg> Disclaimer</span> ${disclaimer}</div>`;
+        
+        // Trigger CSS reflow for animation delay
+        setTimeout(() => {
+            document.querySelectorAll('.bar-fill').forEach(bar => {
+                bar.style.width = bar.getAttribute('data-target');
+            });
+        }, 50);
+        
+        return phtml;
+    }
+
+    /* ── Animations Configuration ─────────────────────────────────────── */
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = `
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes scanImage {
+            0% { transform: translateY(-10px); opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { transform: translateY(220px); opacity: 0; }
+        }
+        .laser-active {
+            display: block !important;
+            animation: scanImage 1.5s linear infinite;
+        }
+        .recording-pulse {
+            animation: recordPulse 1.5s infinite;
+            background-color: rgba(239, 68, 68, 0.2) !important;
+            color: #ef4444 !important;
+            border-color: rgba(239, 68, 68, 0.4) !important;
+        }
+        @keyframes recordPulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    `;
+    document.head.appendChild(styleSheet);
+
+
+    /* ── File Flow ─────────────────────────────────────── */
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-medical-blue', 'bg-medical-blue/10'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-medical-blue', 'bg-medical-blue/10'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('border-medical-blue', 'bg-medical-blue/10');
+        handleFile(e.dataTransfer.files[0]);
+    });
+
+    function handleFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        selectedFile = file;
+        
+        const url = URL.createObjectURL(file);
+        previewImg.src = url;
+        fileInfoEl.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        
+        dropZone.classList.add('hidden');
+        previewWrap.classList.remove('hidden');
+        previewWrap.classList.add('flex');
+        
+        analyseBtn.disabled = false;
+    }
+
+    clearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectedFile = null;
+        fileInput.value = '';
+        previewImg.src = '';
+        
+        previewWrap.classList.add('hidden');
+        previewWrap.classList.remove('flex');
+        dropZone.classList.remove('hidden');
+        
+        analyseBtn.disabled = true;
+    });
+
+    /* ── Analyse Flow ─────────────────────────────────────── */
+    analyseBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+
+        let apiUrl = apiUrlInput.value.trim();
+        
+        // Start Loading State UI
+        analyseBtn.disabled = true;
+        analyseIcon.classList.add('hidden');
+        analyseText.textContent = "Processing...";
+        analyseLoader.classList.remove('hidden');
+        laserScanner.classList.add('laser-active');
+
+        // Render user message instantly
+        addMsg('user', `<div class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> <span class="font-medium text-white/90">Image Sent for Analysis</span></div>`);
+
+        try {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('session_id', sessionId);
+
+            const res = await fetch(apiUrl, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.detail || 'Server error');
+
+            // Render Predictions
+            const diagnosisHtml = `<p class="font-medium text-slate-100 mb-2">Diagnostic Scan Complete.</p>` + formatPredictions(data);
+            addMsg('bot', diagnosisHtml);
+
+            // Render Advice & Audio
+            if (data.advice_text) {
+                 addMsg('bot', `<div class="flex items-start gap-2 text-medical-purple"><svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg> <div><strong class="text-slate-100">Consultation Advice:</strong><br><span class="text-slate-300">${data.advice_text}</span></div></div>`);
+            }
+            if (data.advice_audio_base64) {
+                 const audio = new Audio("data:audio/mp3;base64," + data.advice_audio_base64);
+                 audio.play();
+            }
+
+        } catch (err) {
+            addMsg('bot', `<span class="text-red-400 font-medium flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Error:</span> <span class="text-slate-300 block mt-1">${err.message}</span><small class="text-slate-500 block mt-2 border-t border-slate-700/50 pt-2">Make sure API is reachable at <code>${apiUrl}</code></small>`);
+        }
+
+        // Restore UI State
+        analyseBtn.disabled = false;
+        analyseIcon.classList.remove('hidden');
+        analyseText.textContent = "Analyse Image";
+        analyseLoader.classList.add('hidden');
+        laserScanner.classList.remove('laser-active');
+    });
+
+    /* ── Voice Flow ─────────────────────────────────────── */
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+
+    recordBtn.addEventListener('click', async () => {
+        if (!isRecording) {
+            // START RECORDING
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    // Destroy stream
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // Proceed to send the captured voice
+                    await sendVoiceAudio(audioBlob); 
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.classList.add('recording-pulse', 'bg-red-500/10');
+                recordBtn.classList.remove('bg-slate-800', 'border-slate-600');
+                recordIcon.innerHTML = '🛑';
+                recordText.textContent = 'Recording...';
+                recordText.classList.remove('opacity-0');
+            } catch (err) {
+                alert('Microphone access denied. ' + err.message);
+            }
+        } else {
+            // STOP RECORDING (triggers the onstop above automatically)
+            mediaRecorder.stop();
+            isRecording = false;
+            
+            recordBtn.classList.remove('recording-pulse', 'bg-red-500/10');
+            recordBtn.classList.add('bg-slate-800', 'border-slate-600');
+            recordIcon.innerHTML = '🎤';
+            recordText.textContent = 'Voice Consultation';
+            recordText.classList.add('opacity-0');
+        }
+    });
+
+    async function sendVoiceAudio(audioBlob) {
+        let apiUrl = apiUrlInput.value.trim();
+        if (apiUrl.endsWith('/predict/skin')) apiUrl = apiUrl.replace('/predict/skin', '/predict/voice');
+        else if (apiUrl.endsWith('/predict')) apiUrl = apiUrl.replace('/predict', '/predict/voice');
+        
+        // Setup Temporary User Bubble
+        let temporaryUserBubble = addMsg('user', `<div class="flex items-center gap-2"><svg class="w-4 h-4 animate-pulse relative top-[1px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg> <span class="font-medium text-white/90 italic tracking-wide">Transcribing audio...</span></div>`);
+
+        // Lock button into processing state
+        recordBtn.disabled = true;
+        recordIcon.classList.add('hidden');
+        recordText.textContent = 'Processing...';
+        recordText.classList.remove('opacity-0');
+        voiceLoader.classList.remove('hidden');
+
+        try {
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'record.webm');
+            formData.append('session_id', sessionId);
+
+            const res = await fetch(apiUrl, { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.detail || 'Server error');
+
+            // Replace temp user text with actual transcribed text
+            if (data.user_text && data.user_text !== "(No speech detected)") {
+                const bubbleContent = temporaryUserBubble.querySelector('.bg-medical-blue');
+                if (bubbleContent) {
+                    bubbleContent.innerHTML = `<span class="italic text-white/80 opacity-90 font-light pr-1 text-lg">"</span>${data.user_text}<span class="italic text-white/80 opacity-90 font-light pl-1 text-lg">"</span>`;
+                }
+            } else {
+                const bubbleContent = temporaryUserBubble.querySelector('.bg-medical-blue');
+                if (bubbleContent) bubbleContent.innerHTML = `<span class="text-white/60 italic">(No speech detected)</span>`;
+            }
+
+            // Render Bot Reply
+            addMsg('bot', `<div class="text-slate-200">${data.doctor_reply}</div>`);
+            
+            // Play Audio Response
+            if (data.audio_base64) {
+                const audio = new Audio("data:audio/mp3;base64," + data.audio_base64);
+                audio.play();
+            }
+        } catch (err) {
+            addMsg('bot', `<span class="text-red-400 font-medium">Error:</span> <span class="text-slate-300 block">${err.message}</span>`);
+        }
+
+        // Restore button state
+        recordBtn.disabled = false;
+        recordIcon.classList.remove('hidden');
+        voiceLoader.classList.add('hidden');
+        recordText.textContent = 'Voice Consultation';
+        recordText.classList.add('opacity-0');
+    }
+</script>
+</body>
+</html>

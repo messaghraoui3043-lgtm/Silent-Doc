@@ -1,0 +1,74 @@
+# Silent Doctor — Walkthrough
+
+## What Was Built
+
+A complete local-first AI medical assistant with **20 files** across 7 packages:
+
+```
+silent_doctor/
+├── main.py                          ← Interactive CLI entry point
+├── requirements.txt                 ← All dependencies
+├── config/settings.py               ← Centralized configuration
+├── utils/helpers.py                 ← Image, audio, logging utilities
+├── orchestrator/router.py           ← LangChain routing (5 pipelines)
+├── models/
+│   ├── skin_model.py                ← MobileNetV2 (5 skin classes)
+│   └── eye_model.py                 ← MobileNetV3-Small (4 eye classes)
+├── voice/
+│   ├── speech_to_text.py            ← faster-whisper (INT8 quantized)
+│   ├── translation.py               ← NLLB-200 via CTranslate2
+│   └── tts.py                       ← Coqui XTTS v2
+├── rag/
+│   ├── embeddings.py                ← all-MiniLM-L6-v2
+│   ├── vector_store.py              ← FAISS + PDF/text ingestion
+│   └── medical_rag.py               ← RAG → Ollama (Gemma 2B)
+├── modules/
+│   └── child_support.py             ← Pediatric health assessment
+└── datasets/                        ← Medical PDFs go here
+```
+
+## Key Architecture Decisions
+
+| Decision | Rationale |
+|---|---|
+| **Lazy model loading** | All models load on first use, not at startup — critical for low-RAM devices |
+| **Singleton caching** | `get_*()` factory functions ensure each model loads only once |
+| **LangChain `RunnableLambda`** | Clean composable routing without heavy framework overhead |
+| **INT8 quantization** | Whisper + NLLB quantized for ~50% memory savings |
+| **Env-var overrides** | Every model/endpoint is configurable via environment variables |
+| **Medical safety prompts** | LLM always disclaims it's not a real doctor and recommends professional care |
+
+## Voice Pipeline Flow
+
+```
+User speaks (Darija/Amazigh)
+  → faster-whisper STT (auto language detection)
+  → NLLB translate to English
+  → RAG retrieval (FAISS) + Ollama LLM (Gemma 2B)
+  → NLLB translate back to user's language
+  → Coqui XTTS v2 text-to-speech
+```
+
+## Verification Results
+
+- **Syntax checks**: All 13 [.py](file:///c:/Users/UserDev/Desktop/silent-doctor/silent-doctor/main.py) files pass `python -m py_compile` ✅
+- **Project tree**: All 20 expected files present ✅
+
+## Getting Started
+
+```bash
+# 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Pull the LLM model
+ollama pull gemma:2b
+
+# 3. Add medical documents to datasets/
+#    (PDFs, .txt, .md files)
+
+# 4. Run the application
+python main.py
+
+# 5. Select option 6 to build the knowledge base first
+#    Then use any other option for consultations
+```

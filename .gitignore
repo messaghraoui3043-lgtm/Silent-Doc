@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.env
+.venv
+venv/
+ENV/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Large dataset and data files
+dataset/
+datasets/
+*.csv
+
+# Model weights (large binary files)
+models/weights/
+*.h5
+*.pt
+*.pth
+*.pkl
+
+# Large binary files
+ffmpeg.exe
+
+# Audio temp files
+audio/tmp/
+
+# RAG DB
+rag/medical_database/
+!rag/medical_database/.keep
+rag/index/
+
+
+venv/
+__pycache__/
+*.pt
+*.h5
+*.faiss
+rag/index/
