@@ -50,7 +50,7 @@ def serve_index():
         return HTMLResponse(content=f.read())
 
 @app.post("/predict/skin")
-async def predict_skin(file: UploadFile = File(...), session_id: str = Form("default")):
+async def predict_skin(file: UploadFile = File(...), session_id: str = Form("default"), language: str = Form("Darija")):
     """Skin Lesion top-3 prediction using MobileNetv2 + Grad-CAM heatmap"""
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="Only image files are accepted.")
@@ -75,7 +75,7 @@ async def predict_skin(file: UploadFile = File(...), session_id: str = Form("def
             })
         
         from models.voice_model import generate_medical_advice_for_prediction
-        advice_data = generate_medical_advice_for_prediction(top_prediction["label"], top_prediction["confidence"], session_id=session_id)
+        advice_data = generate_medical_advice_for_prediction(top_prediction["label"], top_prediction["confidence"], session_id=session_id, language=language)
             
     except Exception as e:
         import traceback
@@ -111,7 +111,7 @@ async def predict_eye(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}\n\n{err_str}")
 
 @app.post("/predict/voice")
-async def predict_voice(file: UploadFile = File(...), session_id: str = Form("default")):
+async def predict_voice(file: UploadFile = File(...), session_id: str = Form("default"), language: str = Form("Darija")):
     """Voice Consultation endpoint"""
     if not file.content_type.startswith("audio/") and not file.content_type.startswith("video/"):
         # browsers sometimes send audio as video/webm
@@ -121,7 +121,7 @@ async def predict_voice(file: UploadFile = File(...), session_id: str = Form("de
         audio_bytes = await file.read()
         from fastapi.responses import StreamingResponse
         from models.voice_model import process_voice_consultation_stream
-        return StreamingResponse(process_voice_consultation_stream(audio_bytes, session_id=session_id), media_type="text/event-stream")
+        return StreamingResponse(process_voice_consultation_stream(audio_bytes, session_id=session_id, language=language), media_type="text/event-stream")
         
     except Exception as e:
         import traceback

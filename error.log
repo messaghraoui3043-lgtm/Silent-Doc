@@ -1,10 +1,10 @@
 Traceback (most recent call last):
-  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 152, in predict_voice
-    result = process_voice_consultation(audio_bytes, session_id=session_id)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\voice_model.py", line 134, in process_voice_consultation
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 78, in predict_skin
+    advice_data = generate_medical_advice_for_prediction(top_prediction["label"], top_prediction["confidence"], session_id=session_id, language=language)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\voice_model.py", line 209, in generate_medical_advice_for_prediction
     raise e
-  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\voice_model.py", line 120, in process_voice_consultation
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\voice_model.py", line 198, in generate_medical_advice_for_prediction
     response = client.models.generate_content(
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\genai\models.py", line 6021, in generate_content
