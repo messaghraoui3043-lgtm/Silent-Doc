@@ -6,9 +6,9 @@ from pathlib import Path
 
 class MedicalRetriever:
     def __init__(self, 
-                 index_path="rag/index/medical_index.faiss",
-                 chunks_path="rag/index/medical_chunks.txt",
-                 model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"):
+                 index_path="rag/moroccan_medical_brain.index",
+                 chunks_path="rag/moroccan_medical_meta.pkl",
+                 model_name="sentence-transformers/all-MiniLM-L6-v2"):
         
         self.root_dir = Path(__file__).resolve().parent.parent
         self.index_path = self.root_dir / index_path
@@ -28,9 +28,10 @@ class MedicalRetriever:
             print(f"[RAG] Warning: Knowledge chunks not found at {self.chunks_path}. Run ingest script first.")
             return
             
-        with open(self.chunks_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-            self.chunks_data = [line.strip().replace('|||', '\n') for line in lines]
+        import pickle
+        with open(self.chunks_path, "rb") as f:
+            self.chunks_data = pickle.load(f)
+            print(f"[RAG] Successfully loaded {len(self.chunks_data)} text chunks into memory.")
             
     def _load_index(self):
         if not self.index_path.exists():
@@ -47,8 +48,11 @@ class MedicalRetriever:
         if self.index is None or not self.chunks_data:
             return None
             
-        query_embedding = self.model.encode([query], show_progress_bar=False)
-        distances, indices = self.index.search(np.array(query_embedding).astype('float32'), top_k)
+        # Calculate embeddings and convert to the exact FAISS-ready numpy precision
+        query_embedding = self.model.encode([query], show_progress_bar=False, convert_to_numpy=True)
+        faiss.normalize_L2(query_embedding) # CRITICAL: IVF Flat L2 requires normalized vectors for accuracy
+        
+        distances, indices = self.index.search(query_embedding, top_k)
         
         results = []
         # Return top N matches

@@ -88,9 +88,10 @@ def generate_medical_advice_for_prediction(prediction_label: str, confidence: fl
         "3. تجنب العربية الفصحى تماماً.\n"
         "4. استعمل مصطلحات طبية بالدارجة: 'السخانة' (fever)، 'الوجع' (pain)، 'الحكة' (itch)، 'الحبوب' (pimples/lesions).\n\n"
         "BEHAVIOR RULES:\n"
-        "1. Answer strictly based on the provided CLINICAL BACKGROUND.\n"
-        "2. If the case is vague, ask logical follow-up questions instead of guessing.\n"
-        "3. Close with a warm, encouraging question in Darija."
+        "1. SYNTHESIZE EXPERT ADVICE EXCLUSIVELY FROM THE PROVIDED [MOROCCAN MEDICAL TEXTBOOK EXTRACTS].\n"
+        "2. Do not hallucinate external medical treatments. If the textbook extracts do not contain the answer, say you don't know.\n"
+        "3. If the case is vague, ask logical follow-up questions instead of guessing.\n"
+        "4. Close with a warm, encouraging question in Darija."
     )
     
     TAMAZIGHT_PROMPT = (
@@ -131,7 +132,7 @@ def generate_medical_advice_for_prediction(prediction_label: str, confidence: fl
         
     prompt_text = (
         f"المريض دار فحص بالذكاء الاصطناعي وخرجت النتيجة: '{prediction_label}' بنسبة {confidence}%.\n"
-        f"\n[CLINICAL BACKGROUND]:\n{background_context if background_context else 'No extra background available.'}\n"
+        f"\n[MOROCCAN MEDICAL TEXTBOOK EXTRACTS - DO NOT IGNORE]:\n{background_context if background_context else 'No extra background available.'}\n"
         "\nشرح للمريض النتيجة بأسلوب 'طبيب الدار' المغربي، يكون متعاطف وبسيط. اعطيه نصيحة طبية وسولو شي سؤال باش يكمل معاك الهدرة."
     )
     
@@ -236,7 +237,8 @@ def process_voice_consultation_stream(audio_bytes: bytes, session_id: str = "def
                 sys_prompt = (
                     "أنت هو 'الطبيب ديالنا' - طبيب مغربي رقمي، كتهضر بالدارجة المغربية الأصيلة.\n"
                     "تجنب العربية الفصحى (Fusha). استخدم كلمات مثل: دابة، بزاف، واش، هانية، عافاك، شريف.\n"
-                    "إذا كان السؤال عام، سقسيه أسئلة دقيقة باش تعرف الحالة مزيان قبل ما تعطي تشخيص."
+                    "إذا كان السؤال عام، سقسيه أسئلة دقيقة باش تعرف الحالة مزيان قبل ما تعطي تشخيص.\n"
+                    "CRITICAL MEDICAL RULE: Synthesize your medical advice strictly using the [FAISS MEDICAL DATABASE EXTRACTS] provided by the system. Do NOT invent treatments outside these authorized protocols."
                 )
                 first_reply = "مرحبا بيك! أنا الطبيب الرقمي ديالك، كيفاش نقدر نعاونك؟"
                 
@@ -245,7 +247,7 @@ def process_voice_consultation_stream(audio_bytes: bytes, session_id: str = "def
                 {"role": "assistant", "content": first_reply}
             ]
             
-        contextual_prompt = f"[Medical Context]:\n{medical_context if medical_context else 'No context found.'}\n\n[User]: {user_text}"
+        contextual_prompt = f"[FAISS MEDICAL DATABASE EXTRACTS]:\n{medical_context if medical_context else 'No specific FAISS entry found for this concern.'}\n\n[Patient Microphone Transcript]: {user_text}"
         user_sessions[session_id].append({"role": "user", "content": contextual_prompt})
         
         if len(user_sessions[session_id]) > 42:
