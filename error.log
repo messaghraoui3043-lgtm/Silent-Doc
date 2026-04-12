@@ -1,48 +1,12 @@
 Traceback (most recent call last):
-  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 78, in predict_skin
-    advice_data = generate_medical_advice_for_prediction(top_prediction["label"], top_prediction["confidence"], session_id=session_id, language=language)
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\voice_model.py", line 209, in generate_medical_advice_for_prediction
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 123, in predict_acne
+    result = predict_acne_image(image_bytes)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\acne_model.py", line 50, in predict_acne_image
+    model = get_yolo_model()
+            ^^^^^^^^^^^^^^^^
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\acne_model.py", line 39, in get_yolo_model
     raise e
-  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\voice_model.py", line 198, in generate_medical_advice_for_prediction
-    response = client.models.generate_content(
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\genai\models.py", line 6021, in generate_content
-    response = self._generate_content(
-               ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\genai\models.py", line 4683, in _generate_content
-    response = self._api_client.request(
-               ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\genai\_api_client.py", line 1532, in request
-    response = self._request(http_request, http_options, stream=False)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\genai\_api_client.py", line 1327, in _request
-    return self._retry(self._request_once, http_request, stream)  # type: ignore[no-any-return]
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\tenacity\__init__.py", line 470, in __call__
-    do = self.iter(retry_state=retry_state)
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\tenacity\__init__.py", line 371, in iter
-    result = action(retry_state)
-             ^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\tenacity\__init__.py", line 413, in exc_check
-    raise retry_exc.reraise()
-          ^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\tenacity\__init__.py", line 184, in reraise
-    raise self.last_attempt.result()
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures\_base.py", line 449, in result
-    return self.__get_result()
-           ^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures\_base.py", line 401, in __get_result
-    raise self._exception
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\tenacity\__init__.py", line 473, in __call__
-    result = fn(*args, **kwargs)
-             ^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\genai\_api_client.py", line 1304, in _request_once
-    errors.APIError.raise_for_response(response)
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\genai\errors.py", line 155, in raise_for_response
-    cls.raise_error(response.status_code, response_json, response)
-  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\genai\errors.py", line 186, in raise_error
-    raise ServerError(status_code, response_json, response)
-google.genai.errors.ServerError: 503 UNAVAILABLE. {'error': {'code': 503, 'message': 'This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.', 'status': 'UNAVAILABLE'}}
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\acne_model.py", line 34, in get_yolo_model
+    raise FileNotFoundError(f"Model file not found at {MODEL_PATH}. Please ensure the .pt file is placed in models/weights/")
+FileNotFoundError: Model file not found at C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\weights\yolo_acne_detection.pt. Please ensure the .pt file is placed in models/weights/

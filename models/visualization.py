@@ -144,3 +144,4 @@ def gradcam_keras(keras_model, img_array: np.ndarray, target_layer_name: str, ta
     if cam.max() > 0:
         cam /= cam.max()
     return cam.astype(np.float32)
+    

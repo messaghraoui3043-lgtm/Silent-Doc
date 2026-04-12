@@ -115,9 +115,10 @@
 
         <div class="glass-panel p-5 rounded-2xl flex flex-col gap-3">
             <h2 class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Diagnostic Model</h2>
-            <div class="flex bg-slate-900/50 p-1 rounded-xl border border-slate-700">
-                <button id="model-skin-btn" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all bg-medical-blue/20 text-medical-blue border border-medical-blue/30 shadow-[0_0_10px_rgba(59,130,246,0.1)]">🩺 Skin Scan</button>
-                <button id="model-eye-btn" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">👁️ Eye Scan</button>
+            <div class="flex bg-slate-900/50 p-1 rounded-xl border border-slate-700 overflow-x-auto whitespace-nowrap">
+                <button id="model-skin-btn" class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all bg-medical-blue/20 text-medical-blue border border-medical-blue/30 shadow-[0_0_10px_rgba(59,130,246,0.1)]">🩺 Skin Scan</button>
+                <button id="model-eye-btn" class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">👁️ Eye Scan</button>
+                <button id="model-acne-btn" class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">🧴 Acne Scan</button>
             </div>
         </div>
     </aside>
@@ -193,6 +194,7 @@
     // Model Selectors
     const modelSkinBtn = document.getElementById('model-skin-btn');
     const modelEyeBtn = document.getElementById('model-eye-btn');
+    const modelAcneBtn = document.getElementById('model-acne-btn');
 
     // UI State Elements
     const analyseText = document.getElementById('analyse-text');
@@ -209,16 +211,30 @@
     let selectedFile = null;
     let activeApiEndpoint = 'http://localhost:5000/predict/skin';
 
+    const baseBtnCls = "flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent";
+    
+    function resetModelButtons() {
+        modelSkinBtn.className = baseBtnCls;
+        modelEyeBtn.className = baseBtnCls;
+        modelAcneBtn.className = baseBtnCls;
+    }
+
     modelSkinBtn.addEventListener('click', () => {
         activeApiEndpoint = 'http://localhost:5000/predict/skin';
-        modelSkinBtn.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all bg-medical-blue/20 text-medical-blue border border-medical-blue/30 shadow-[0_0_10px_rgba(59,130,246,0.1)]";
-        modelEyeBtn.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent";
+        resetModelButtons();
+        modelSkinBtn.className = "flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all bg-medical-blue/20 text-medical-blue border border-medical-blue/30 shadow-[0_0_10px_rgba(59,130,246,0.1)]";
     });
 
     modelEyeBtn.addEventListener('click', () => {
         activeApiEndpoint = 'http://localhost:5000/predict/eye';
-        modelEyeBtn.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all bg-medical-purple/20 text-medical-purple border border-medical-purple/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]";
-        modelSkinBtn.className = "flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent";
+        resetModelButtons();
+        modelEyeBtn.className = "flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all bg-medical-purple/20 text-medical-purple border border-medical-purple/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]";
+    });
+
+    modelAcneBtn.addEventListener('click', () => {
+        activeApiEndpoint = 'http://localhost:5000/predict/acne';
+        resetModelButtons();
+        modelAcneBtn.className = "flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]";
     });
 
     /* ── Utilities ─────────────────────────────────────── */
@@ -419,7 +435,11 @@
             formData.append('session_id', sessionId);
             formData.append('language', languageSelect.value);
 
-            const res = await fetch(apiUrl, { method: 'POST', body: formData });
+            const res = await fetch(apiUrl, { 
+                method: 'POST', 
+                body: formData,
+                headers: { 'X-API-Key': 'silent-doc-dev-key' }
+            });
             const data = await res.json();
 
             if (!res.ok) throw new Error(data.detail || 'Server error');
@@ -534,7 +554,11 @@
             formData.append('session_id', 'streaming-session'); // Forced deterministic ID for streaming demo
             formData.append('language', languageSelect.value);
 
-            const res = await fetch(apiUrl, { method: 'POST', body: formData });
+            const res = await fetch(apiUrl, { 
+                method: 'POST', 
+                body: formData,
+                headers: { 'X-API-Key': 'silent-doc-dev-key' }
+            });
             if (!res.ok) throw new Error("Server Error: " + res.statusText);
 
             const reader = res.body.getReader();

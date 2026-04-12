@@ -8,14 +8,15 @@ import base64
 import whisper
 import json
 import queue
+from groq import Groq
 from google import genai
 import azure.cognitiveservices.speech as speechsdk
 from dotenv import load_dotenv
 from rag.retriever import get_retriever
 
 load_dotenv(override=True)
-
 _whisper_model = None
+_groq_client = None
 _gemini_client = None
 
 # Global dictionary to store conversational state in-memory
@@ -28,6 +29,15 @@ def get_whisper_model():
         _whisper_model = whisper.load_model("medium")
         print("[voice_model] Whisper model loaded.")
     return _whisper_model
+
+def get_groq_client():
+    global _groq_client
+    if _groq_client is None:
+        API_KEY = os.environ.get("GROQ_API_KEY")
+        if not API_KEY:
+            raise ValueError("GROQ_API_KEY is not set in .env")
+        _groq_client = Groq(api_key=API_KEY)
+    return _groq_client
 
 def get_gemini_client():
     global _gemini_client
@@ -61,171 +71,115 @@ def _azure_tts(text: str, voice_name: str = "ar-MA-JamalNeural") -> str:
     else:
         raise RuntimeError(f"Speech synthesis failed: {result.reason}")
 
-def process_voice_consultation(audio_bytes: bytes, session_id: str = "default") -> dict:
-    """
-    Takes audio bytes, transcribes, feeds to Gemini matching session state, 
-    converts reply to Azure TTS, and returns a base64 string of the TTS audio.
-    """
-    out_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "audio", "tmp")
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir, exist_ok=True)
-        
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".webm", dir=out_dir) as temp_in:
-        temp_in.write(audio_bytes)
-        in_path = temp_in.name
-
-    try:
-        model = get_whisper_model()
-        darija_prompt = "هذه محادثة بالدارجة المغربية: واش، مزيان، بزاف، دابا، واخا، عافاك، ديالي، شنو، كيفاش."
-        
-        print("[DEBUG] 1. Starting Whisper Transcription...")
-        result = model.transcribe(in_path, language="ar", initial_prompt=darija_prompt)
-        user_text = result["text"].strip()
-        print(f"[DEBUG] -> Transcribed: {user_text}")
-        
-        if not user_text:
-            return {
-                "user_text": "(No speech detected)",
-                "doctor_reply": "ما سمعت والو، عاود هضر عافاك.",
-                "audio_base64": ""
-            }
-
-        print("[DEBUG] 2. Querying RAG Database...")
-        retriever = get_retriever()
-        medical_context = retriever.get_context(user_text)
-        print("[DEBUG] -> RAG Context retrieved.")
-        
-        client = get_gemini_client()
-        
-        if session_id not in user_sessions:
-            sys_prompt = (
-                "أنت طبيب مغربي محترف ومتعاطف جداً. تواصل مع المريض حصرياً بـ 'الدارجة المغربية' بشكل طبيعي ومريح.\n\n"
-                "RULES FOR BEHAVIOR:\n"
-                "1. NEVER repeat the same greetings or closings. Vary your conversational flow naturally.\n"
-                "2. If the user gives generic symptoms (like fever or headache), DO NOT immediately output a random severe or extreme illness from the RAG context. Instead, ask short, logical follow-up questions to gather more specific symptoms (e.g., 'من إمتى باديك هاد الحريق؟', 'واش كاين شي أعراض خرى؟').\n"
-                "3. ONLY suggest a diagnosis when you have collected enough specific symptoms that match the provided medical context.\n"
-                "4. Answer ONLY using the provided medical context. If the answer is not in the context, politely say that you don't know in naturally sounding Moroccan Darija: 'سمح ليا، ماعنديش معلومات دقيقة على هاد الحالة دابا.'."
-            )
-            user_sessions[session_id] = [
-                {"role": "user", "parts": [{"text": sys_prompt}]},
-                {"role": "model", "parts": [{"text": "مرحبا! أنا طبيبك الرقمي."}]}
-            ]
-            
-        contextual_prompt = f"[Medical Context]:\n{medical_context if medical_context else 'No context found.'}\n\n[User]: {user_text}"
-        user_sessions[session_id].append({"role": "user", "parts": [{"text": contextual_prompt}]})
-        
-        if len(user_sessions[session_id]) > 42:
-            user_sessions[session_id] = user_sessions[session_id][:2] + user_sessions[session_id][-40:]
-        
-        print("[DEBUG] 3. Waiting for Gemini Reply...")
-        try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=user_sessions[session_id],
-            )
-            doctor_reply = response.text
-            print("[DEBUG] -> Gemini replied successfully.")
-        except Exception as e:
-            error_str = str(e)
-            if any(code in error_str for code in ["429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE"]):
-                doctor_reply = "عفواً، النظام عليه ضغط كبير دابا من طرف جوجل. المرجو انتظار بضع ثواني وإعادة المحاولة."
-                print(f"[DEBUG] -> Gemini API Overloaded: {error_str}")
-                # Remove recent failed prompt from memory 
-                if user_sessions[session_id] and user_sessions[session_id][-1]["role"] == "user":
-                    user_sessions[session_id].pop()
-            else:
-                print(f"[DEBUG] -> Gemini Exception: {error_str}")
-                raise e
-        
-        user_sessions[session_id][-1]["parts"][0]["text"] = user_text 
-        user_sessions[session_id].append({"role": "model", "parts": [{"text": doctor_reply}]})
-
-        print("[DEBUG] 4. Generating Azure TTS Audio...")
-        audio_b64 = _azure_tts(doctor_reply)
-        print("[DEBUG] -> Audio Generation Finished Successfully.")
-        
-        return {
-            "user_text": user_text,
-            "doctor_reply": doctor_reply,
-            "audio_base64": audio_b64
-        }
-    finally:
-        # Cleanup input file
-        if os.path.exists(in_path):
-            os.remove(in_path)
 
 def generate_medical_advice_for_prediction(prediction_label: str, confidence: float, session_id: str = "default", language: str = "Darija") -> dict:
-    client = get_gemini_client()
+    client = get_groq_client()
     
     # --- RAG Integration ---
     retriever = get_retriever()
     background_context = retriever.get_context(prediction_label)
     
+    # --- PROMPTS ---
+    DARIJA_PROMPT = (
+        "أنت هو 'الطبيب ديالنا' - طبيب مغربي رقمي، كتهضر بالدارجة المغربية الأصيلة.\n\n"
+        "قواعد اللغة (STYLE GUIDELINES):\n"
+        "1. استعمل مفردات مغربية حقيقية (دابة، بزاف، شوية، واش، واخا، عافاك، شريف/لالة).\n"
+        "2. استخدم الحروف العربية فقط (Arabic Script) لكل الكلمات الدارجة. يمنع منعاً كلياً خلط الحروف اللاتينية وسط الكلمات العربية.\n"
+        "3. تجنب العربية الفصحى تماماً.\n"
+        "4. استعمل مصطلحات طبية بالدارجة: 'السخانة' (fever)، 'الوجع' (pain)، 'الحكة' (itch)، 'الحبوب' (pimples/lesions).\n\n"
+        "BEHAVIOR RULES:\n"
+        "1. Answer strictly based on the provided CLINICAL BACKGROUND.\n"
+        "2. If the case is vague, ask logical follow-up questions instead of guessing.\n"
+        "3. Close with a warm, encouraging question in Darija."
+    )
+    
+    TAMAZIGHT_PROMPT = (
+        "أنت طبيب مغربي رقمي متعاطف. تتواصل مع المريض حصرياً بـ 'الأمازيغية المغربية (Tamazight)'.\n"
+        "يجب عليك الكتابه باستخدام الحروف العربية (Phonetic Arabic script) لسهولة القراءة.\n"
+        "RULES:\n"
+        "1. NEVER repeat greetings. 2. Be professional. 3. Answer from CLINICAL BACKGROUND if available."
+    )
+    
+    ENGLISH_PROMPT = "You are a professional and empathetic digital Moroccan doctor. Speak EXCLUSIVELY in English in a comforting tone.\n\nRULES FOR BEHAVIOR:\n1. NEVER repeat greetings. 2. If vague, ask follow-up questions. 3. Answer strictly from CLINICAL BACKGROUND if exists."
+
     # Initialize session if not exists
     if session_id not in user_sessions:
         if language == "Tamazight":
-            sys_prompt = "أنت طبيب مغربي رقمي ومتعاطف. تتواصل مع المريض حصرياً بـ 'الأمازيغية المغربية (Tamazight)'. يجب عليك كتابة الأمازيغية باستخدام الحروف العربية فقط (Phonetic Arabic script) وليس اللاتينية. مثال: 'أزول مانيك أنتگيت'.\n\nRULES FOR BEHAVIOR:\n1. NEVER repeat greetings. 2. If vague, ask follow-up questions. 3. Answer strictly based on CLINICAL BACKGROUND if provided."
+            sys_prompt = TAMAZIGHT_PROMPT
             first_reply = "أزول! نكي د أمجاي نك أراك."
         elif language == "English":
-            sys_prompt = "You are a professional and empathetic digital Moroccan doctor. Speak EXCLUSIVELY in English in a comforting tone.\n\nRULES FOR BEHAVIOR:\n1. NEVER repeat greetings. 2. If vague, ask follow-up questions. 3. Answer strictly from CLINICAL BACKGROUND if exists."
+            sys_prompt = ENGLISH_PROMPT
             first_reply = "Hello! I am your digital doctor."
         else:
-            sys_prompt = (
-                "أنت طبيب مغربي رقمي ومحترف ومتعاطف. تتحدث بالدارجة المغربية فقط بشكل مريح وودود.\n\n"
-                "RULES FOR BEHAVIOR:\n"
-                "1. NEVER repeat the same greetings or closings. Vary your conversational flow naturally.\n"
-                "2. If symptoms or results are vague, do not diagnose extreme diseases automatically. Ask logical follow-up questions.\n"
-                "3. Answer strictly based on the provided CLINICAL BACKGROUND if it exists."
-            )
-            first_reply = "مرحبا! أنا طبيبك الرقمي."
+            sys_prompt = DARIJA_PROMPT
+            first_reply = "مرحبا بيك شريف! أنا طبيبك الرقمي، هانية؟"
             
         user_sessions[session_id] = [
-            {"role": "user", "parts": [{"text": sys_prompt}]},
-            {"role": "model", "parts": [{"text": first_reply}]}
+            {"role": "system", "content": sys_prompt},
+            {"role": "assistant", "content": first_reply}
         ]
         
+    # User switched language mid-session? Dynamically update the persona in memory!
+    if language == "Tamazight":
+        new_sys_prompt = "أنت طبيب مغربي رقمي متعاطف. تتواصل مع المريض حصرياً بـ 'الأمازيغية المغربية (Tamazight)'. استخدم حروف تيفيناغ الأصلية (Tifinagh script: ⵜⵉⴼⵉⵏⴰⵖ)."
+    elif language == "English":
+        new_sys_prompt = ENGLISH_PROMPT
+    else:
+        new_sys_prompt = DARIJA_PROMPT # Use the Premium prompt
+    
+    user_sessions[session_id][0]["content"] = new_sys_prompt
+        
     prompt_text = (
-        f"المريض يقول: لقد قمت بعمل فحص صورة للجلد، والذكاء الاصطناعي شخص النتيجة: '{prediction_label}' بنسبة {confidence}%.\n"
+        f"المريض دار فحص بالذكاء الاصطناعي وخرجت النتيجة: '{prediction_label}' بنسبة {confidence}%.\n"
         f"\n[CLINICAL BACKGROUND]:\n{background_context if background_context else 'No extra background available.'}\n"
-        "\nأخبر المريض بالنتيجة باختصار وأسلوب متعاطف بالدارجة، وقدم نصيحة طبية سريعة بناءً على المعطيات الطبية أعلاه. "
-        "اختم حديثك بسؤال منطقي ومفتوح عن حالته لتشجيعه على الكلام، وإياك أن تكرر نفس الأسئلة المعتادة حرفياً."
+        "\nشرح للمريض النتيجة بأسلوب 'طبيب الدار' المغربي، يكون متعاطف وبسيط. اعطيه نصيحة طبية وسولو شي سؤال باش يكمل معاك الهدرة."
     )
     
     # Append user prompt
-    user_sessions[session_id].append({"role": "user", "parts": [{"text": prompt_text}]})
+    user_sessions[session_id].append({"role": "user", "content": prompt_text})
     
     try:
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=user_sessions[session_id],
-        )
-        doctor_reply = response.text
+        # Primary: Groq (Llama 3) | Fallback: Gemini
+        try:
+            response = client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=user_sessions[session_id],
+                temperature=0.7,
+                max_tokens=600,
+            )
+            doctor_reply = response.choices[0].message.content
+        except Exception as groq_err:
+            print(f"[voice_model] Groq failed, falling back to Gemini: {groq_err}")
+            gem_client = get_gemini_client()
+            gem_history = []
+            for m in user_sessions[session_id]:
+                r = "model" if m["role"] == "assistant" else "user"
+                gem_history.append({"role": r, "parts": [{"text": m["content"]}]})
+            response = gem_client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=gem_history
+            )
+            doctor_reply = response.text
     except Exception as e:
-        error_str = str(e)
-        if any(code in error_str for code in ["429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE"]):
-            try:
-                print("[DEBUG] -> Gemini 2.5 Failed (Quota). Falling back to gemini-1.5-flash...")
-                response = client.models.generate_content(
-                    model="gemini-1.5-flash",
-                    contents=user_sessions[session_id],
-                )
-                doctor_reply = response.text
-            except Exception as e2:
-                doctor_reply = "عفواً، الطبيب الرقمي مشغول حالياً بكثرة الطلبات (Quota). المرجو محاولة الفحص مرة أخرى بعد قليل."
-                if user_sessions[session_id] and user_sessions[session_id][-1]["role"] == "user":
-                    user_sessions[session_id].pop()
-        else:
-            raise e
+        doctor_reply = "سمح ليا بزاف، السيرفير تقيل شوية. عاود جرب من بعد الله يخليك. (System overloaded)"
+        if user_sessions[session_id] and user_sessions[session_id][-1]["role"] == "user":
+            user_sessions[session_id].pop()
+
     
     # Append model reply
-    user_sessions[session_id].append({"role": "model", "parts": [{"text": doctor_reply}]})
+    user_sessions[session_id].append({"role": "assistant", "content": doctor_reply})
     
+    # Text to Speech (Azure)
     # Text to Speech (Azure)
     voice_name = "ar-MA-JamalNeural"
     if language == "English":
         voice_name = "en-US-AriaNeural"
         
-    audio_b64 = _azure_tts(doctor_reply, voice_name=voice_name)
+    try:
+        audio_b64 = _azure_tts(doctor_reply, voice_name=voice_name)
+    except Exception as e:
+        print(f"[voice_model] Azure TTS failed during prediction: {e}")
+        audio_b64 = ""
     
     return {
         "advice_text": doctor_reply,
@@ -268,63 +222,66 @@ def process_voice_consultation_stream(audio_bytes: bytes, session_id: str = "def
         retriever = get_retriever()
         medical_context = retriever.get_context(user_text)
         
-        # 3. Gemini Query with Session Tracking
-        client = get_gemini_client()
+        # 3. LLM Query with Session Tracking
+        client = get_groq_client()
         
         if session_id not in user_sessions:
             if language == "Tamazight":
-                sys_prompt = "أنت طبيب مغربي محترف. تواصل مع المريض حصرياً بـ 'الأمازيغية المغربية (Tamazight)'. يجب عليك كتابة الأمازيغية باستخدام الحروف العربية فقط (Phonetic Arabic script). مثال: 'أزول مانيك أنتگيت'.\n\nRULES FOR BEHAVIOR:\n1. NEVER repeat greetings. 2. If vague (headache), ask follow-ups. 3. Answer ONLY from Medical Context. 4. If answer not in context, say you do not know."
+                sys_prompt = "أنت طبيب مغربي محترف. تواصل مع المريض حصرياً بـ 'الأمازيغية المغربية (Tamazight)' بحروف عربية."
                 first_reply = "أزول! نكي د أمجاي نك أراك."
             elif language == "English":
-                sys_prompt = "You are a professional Moroccan doctor. Speak EXCLUSIVELY in English.\n\nRULES FOR BEHAVIOR:\n1. NEVER repeat greetings. 2. Ask follow-up questions if symptoms are vague. 3. Answer strictly from the provided Medical Context. 4. Say you don't know if out of context."
+                sys_prompt = "You are a professional Moroccan doctor. Speak EXCLUSIVELY in English."
                 first_reply = "Hello! I am your digital doctor."
             else:
                 sys_prompt = (
-                    "أنت طبيب مغربي محترف ومتعاطف جداً. تواصل مع المريض حصرياً بـ 'الدارجة المغربية' بشكل طبيعي ومريح.\n\n"
-                    "RULES FOR BEHAVIOR:\n"
-                    "1. NEVER repeat the same greetings or closings. Vary your conversational flow naturally.\n"
-                    "2. If the user gives generic symptoms (like fever or headache), DO NOT immediately output a random severe or extreme illness from the RAG context. Instead, ask short, logical follow-up questions to gather more specific symptoms (e.g., 'من إمتى باديك هاد الحريق؟', 'واش كاين شي أعراض خرى؟').\n"
-                    "3. ONLY suggest a diagnosis when you have collected enough specific symptoms that match the provided medical context.\n"
-                    "4. Answer ONLY using the provided medical context. If the answer is not in the context, politely say that you don't know in naturally sounding Moroccan Darija: 'سمح ليا، ماعنديش معلومات دقيقة على هاد الحالة دابا.'."
+                    "أنت هو 'الطبيب ديالنا' - طبيب مغربي رقمي، كتهضر بالدارجة المغربية الأصيلة.\n"
+                    "تجنب العربية الفصحى (Fusha). استخدم كلمات مثل: دابة، بزاف، واش، هانية، عافاك، شريف.\n"
+                    "إذا كان السؤال عام، سقسيه أسئلة دقيقة باش تعرف الحالة مزيان قبل ما تعطي تشخيص."
                 )
-                first_reply = "مرحبا! أنا طبيبك الرقمي."
+                first_reply = "مرحبا بيك! أنا الطبيب الرقمي ديالك، كيفاش نقدر نعاونك؟"
                 
             user_sessions[session_id] = [
-                {"role": "user", "parts": [{"text": sys_prompt}]},
-                {"role": "model", "parts": [{"text": first_reply}]}
+                {"role": "system", "content": sys_prompt},
+                {"role": "assistant", "content": first_reply}
             ]
             
         contextual_prompt = f"[Medical Context]:\n{medical_context if medical_context else 'No context found.'}\n\n[User]: {user_text}"
-        user_sessions[session_id].append({"role": "user", "parts": [{"text": contextual_prompt}]})
+        user_sessions[session_id].append({"role": "user", "content": contextual_prompt})
         
         if len(user_sessions[session_id]) > 42:
             user_sessions[session_id] = user_sessions[session_id][:2] + user_sessions[session_id][-40:]
         
         try:
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=user_sessions[session_id],
-            )
-            doctor_reply = response.text
+            # Primary: Groq (Llama 3) | Fallback: Gemini
+            try:
+                response = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=user_sessions[session_id],
+                    temperature=0.7,
+                    max_tokens=600,
+                )
+                doctor_reply = response.choices[0].message.content
+            except Exception as groq_err:
+                print(f"[voice_model] Groq Error: {groq_err}. Falling back to Gemini...")
+                gem_client = get_gemini_client()
+                gem_history = []
+                for m in user_sessions[session_id]:
+                    r = "model" if m["role"] == "assistant" else "user"
+                    gem_history.append({"role": r, "parts": [{"text": m["content"]}]})
+                response = gem_client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=gem_history
+                )
+                doctor_reply = response.text
         except Exception as e:
-            error_str = str(e)
-            if any(code in error_str for code in ["429", "RESOURCE_EXHAUSTED", "503", "UNAVAILABLE"]):
-                try:
-                    print("[DEBUG] -> Gemini 2.5 Failed (Quota). Falling back to gemini-1.5-flash...")
-                    response = client.models.generate_content(
-                        model="gemini-1.5-flash",
-                        contents=user_sessions[session_id],
-                    )
-                    doctor_reply = response.text
-                except Exception as e2:
-                    doctor_reply = "عفواً، النظام عليه ضغط كبير دابا من طرف جوجل. المرجو انتظار بضع ثواني وإعادة المحاولة."
-                    if user_sessions[session_id] and user_sessions[session_id][-1]["role"] == "user":
-                        user_sessions[session_id].pop()
-            else:
-                raise e
+            print(f"[voice_model] Both LLMs failed: {e}")
+            doctor_reply = "عفواً، النظام واجه مشكل بسيط. المرجو المحاولة مرة أخرى."
+            if user_sessions[session_id] and user_sessions[session_id][-1]["role"] == "user":
+                user_sessions[session_id].pop()
+
         
-        user_sessions[session_id][-1]["parts"][0]["text"] = user_text
-        user_sessions[session_id].append({"role": "model", "parts": [{"text": doctor_reply}]})
+        user_sessions[session_id][-1]["content"] = user_text
+        user_sessions[session_id].append({"role": "assistant", "content": doctor_reply})
 
         # Yield exactly instantly
         yield f"data: {json.dumps({'event': 'text', 'user_text': user_text, 'doctor_reply': doctor_reply})}\n\n"
