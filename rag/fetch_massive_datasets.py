@@ -15,14 +15,11 @@ except ImportError:
 # Configuration
 # ============================================================
 DATASETS = [
-    "lonnieqin/skin_cancer_qa",
-    "Lili99/Clinical_Notes_Dermatology",
-    "medalpaca/medical_meadow_wikidoc",
-    "BIOMEDical-NLP/PubMed-General"
+    ("Williamsanderson/MedQA-Darija-MultiLingual", "default")
 ]
 SPLIT = "train"        # Use the appropriate split ("train", "test", etc.)
 BATCH_SIZE = 5000      # Increased batch size for massive knowledge bases
-MAX_RECORDS_PER_DATASET = 12500 # Pull 12,500 records per dataset to hit 50k total
+MAX_RECORDS_PER_DATASET = 50000 # Pull up to 50k records
 
 def fetch_and_save_data():
     root_dir = Path(__file__).resolve().parent.parent
@@ -33,12 +30,12 @@ def fetch_and_save_data():
     
     print("\n[Database Fetch] Initiating MASSIVE data gathering pipeline...\n")
     
-    for dataset_name in DATASETS:
+    for dataset_name, config_name in DATASETS:
         print(f"[Fetch] Starting download for: '{dataset_name}'")
         try:
             # We strictly request streaming=True on gigantic datasets to prevent RAM exhaustion
             # but standard load_dataset caches the subsets. Safe to load.
-            dataset = load_dataset(dataset_name, split=SPLIT)
+            dataset = load_dataset(dataset_name, config_name, split=SPLIT)
         except Exception as e:
             print(f"[Error] Failed to load '{dataset_name}': {e}\n  -> Skipping to next dataset...\n")
             continue

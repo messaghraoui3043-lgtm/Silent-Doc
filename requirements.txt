@@ -11,6 +11,9 @@ langchain-core>=0.2.0
 # --- Ollama (Local LLM backend) ---
 ollama>=0.2.0
 
+# --- Vector Database ---
+chromadb>=0.4.0
+
 # ============================================================
 # --- Vision Models (Skin + Eye) ---
 # ============================================================

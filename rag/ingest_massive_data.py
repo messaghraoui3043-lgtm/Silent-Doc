@@ -1,24 +1,16 @@
 import os
 import glob
-import pickle
-import faiss
-import numpy as np
 import time
+import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
 
 # ---------------- CONFIGURATION ----------------
 DIR_PATH = os.path.join(os.path.dirname(__file__), "medical_database")
-INDEX_PATH = os.path.join(os.path.dirname(__file__), "moroccan_medical_brain.index")
-META_PATH = os.path.join(os.path.dirname(__file__), "moroccan_medical_meta.pkl")
+DB_PATH = os.path.join(os.path.dirname(__file__), "chroma_db")
 
 CHUNK_SIZE = 1000
 CHUNK_OVERLAP = 200
-EMBED_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
-EMBED_DIM = 384
-FAISS_NLIST = 1024
-TRAIN_LIMIT = 25000
-BATCH_SIZE = 2048
+BATCH_SIZE = 5000 # ChromaDB handles larger batches well
 
 def load_documents():
     """Load all text and markdown files from the target directory."""
@@ -58,8 +50,8 @@ def split_documents(docs):
     print(f"Successfully generated {len(all_chunks)} text chunks.")
     return all_chunks
 
-def build_faiss_index():
-    print("--- Phase 3 FAISS Ingestion Started ---")
+def build_chromadb():
+    print("--- Phase 3 ChromaDB Ingestion Started ---")
     start_time = time.time()
     
     docs = load_documents()
@@ -74,65 +66,36 @@ def build_faiss_index():
         print("Chunking resulted in 0 items. Exiting.")
         return
 
-    print(f"[3] Loading embedding model: {EMBED_MODEL_NAME}...")
-    try:
-        model = SentenceTransformer(EMBED_MODEL_NAME)
-    except Exception as e:
-        print(f"Failed to load sentence-transformer: {e}")
-        return
+    print(f"[3] Initializing ChromaDB Persistent Client at {DB_PATH}...")
+    client = chromadb.PersistentClient(path=DB_PATH)
+    
+    # ChromaDB's default embedding function uses all-MiniLM-L6-v2 which matches the old FAISS model
+    collection = client.get_or_create_collection(
+        name="medical_knowledge",
+        metadata={"hnsw:space": "cosine"}
+    )
 
-    # Prepare FAISS IVF Index
-    print(f"[4] Initializing FAISS IndexIVFFlat (Dim: {EMBED_DIM}, Clusters: {FAISS_NLIST})...")
-    quantizer = faiss.IndexFlatL2(EMBED_DIM)
-    index = faiss.IndexIVFFlat(quantizer, EMBED_DIM, FAISS_NLIST)
-
-    # We must train the IndexIVFFlat
-    print(f"[5] Training FAISS with the first Min({TRAIN_LIMIT}, {total_chunks}) vectors...")
-    chunks_for_training = text_chunks[:TRAIN_LIMIT]
-    try:
-        train_embeddings = model.encode(chunks_for_training, batch_size=256, show_progress_bar=True, convert_to_numpy=True)
-        # Normalize for inner product / L2 speed stability
-        faiss.normalize_L2(train_embeddings)
-        index.train(train_embeddings)
-        print("Training complete!")
-    except Exception as e:
-        print(f"Memory/Training Error: {e}")
-        return
-
-    # Batch Add Loop
-    print("[6] Batch embedding & indexing all chunks...")
+    print("[4] Batch embedding & indexing all chunks into ChromaDB...")
     try:
         for i in range(0, total_chunks, BATCH_SIZE):
             batch_chunks = text_chunks[i:i + BATCH_SIZE]
+            batch_ids = [str(j) for j in range(i, i + len(batch_chunks))]
             print(f"   Processing batch {i} to {i+len(batch_chunks)} / {total_chunks}...")
             
-            batch_embeddings = model.encode(batch_chunks, batch_size=256, convert_to_numpy=True)
-            faiss.normalize_L2(batch_embeddings)
+            collection.add(
+                documents=batch_chunks,
+                ids=batch_ids
+            )
             
-            index.add(batch_embeddings)
-            
-    except MemoryError:
-        print("CRITICAL: Ran out of memory during batch execution!")
-        return
     except Exception as e:
         print(f"Error during ingestion: {e}")
         return
 
-    # Persistence
-    print("[7] Saving Database & Metadata to disk...")
-    # Save the index natively
-    faiss.write_index(index, INDEX_PATH)
-    
-    # Save the raw text chunks to map index IDs natively
-    with open(META_PATH, "wb") as f:
-        pickle.dump(text_chunks, f)
-        
     print("--------------------------------------------------")
-    print(f"INGESTION SUCCESS: Validated {index.ntotal} vectors populated.")
-    print(f"Index saved to: {INDEX_PATH}")
-    print(f"Meta saved to: {META_PATH}")
+    print(f"INGESTION SUCCESS: Validated {collection.count()} vectors populated in ChromaDB.")
+    print(f"Database saved to: {DB_PATH}")
     print(f"Time Taken: {round(time.time() - start_time, 2)} seconds")
     print("--------------------------------------------------")
 
 if __name__ == "__main__":
-    build_faiss_index()
+    build_chromadb()

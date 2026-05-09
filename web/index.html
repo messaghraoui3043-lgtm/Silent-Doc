@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Silent Doctor – Premium AI Diagnostic</title>
+    <meta name="description" content="Silent Doctor – AI-powered skin, eye, and acne diagnostics with voice consultation in Darija, Tamazight and English.">
+    <!-- Inline SVG favicon – fixes 404 for favicon.ico -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩺</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind via CDN (dev mode) – switch to Tailwind CLI for production builds -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -82,9 +86,9 @@
                 <div class="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">🔬</div>
                 <p class="text-sm text-center text-slate-400">
                     <span class="font-semibold text-medical-blue group-hover:text-medical-purple transition-colors">Click to browse</span> or drag & drop<br>
-                    <span class="text-xs opacity-70">JPG, PNG, WebP</span>
+                    <span class="text-xs opacity-70">JPG, PNG, WebP, PDF</span>
                 </p>
-                <input type="file" id="file-input" accept="image/*" class="hidden" />
+                <input type="file" id="file-input" accept="image/*,application/pdf" class="hidden" />
             </div>
 
             <!-- Preview -->
@@ -115,10 +119,11 @@
 
         <div class="glass-panel p-5 rounded-2xl flex flex-col gap-3">
             <h2 class="text-xs font-semibold tracking-wider text-slate-400 uppercase">Diagnostic Model</h2>
-            <div class="flex bg-slate-900/50 p-1 rounded-xl border border-slate-700 overflow-x-auto whitespace-nowrap">
-                <button id="model-skin-btn" class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all bg-medical-blue/20 text-medical-blue border border-medical-blue/30 shadow-[0_0_10px_rgba(59,130,246,0.1)]">🩺 Skin Scan</button>
-                <button id="model-eye-btn" class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">👁️ Eye Scan</button>
-                <button id="model-acne-btn" class="flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">🧴 Acne Scan</button>
+            <div class="grid grid-cols-2 bg-slate-900/50 p-1 rounded-xl border border-slate-700 gap-2">
+                <button id="model-skin-btn" class="w-full whitespace-nowrap px-3 py-2 text-sm font-medium rounded-lg transition-all bg-medical-blue/20 text-medical-blue border border-medical-blue/30 shadow-[0_0_10px_rgba(59,130,246,0.1)]">🩺 Skin Scan</button>
+                <button id="model-eye-btn" class="w-full whitespace-nowrap px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">👁️ Eye Scan</button>
+                <button id="model-acne-btn" class="w-full whitespace-nowrap px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">🧴 Acne Scan</button>
+                <button id="model-doc-btn" class="w-full whitespace-nowrap px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent">📄 Document</button>
             </div>
         </div>
     </aside>
@@ -155,11 +160,6 @@
                     Voice chat initialized... tap mic to speak.
                 </div>
                 <div class="absolute right-2 flex items-center gap-2">
-                    <select id="language-select" class="bg-slate-800 text-slate-300 text-xs border border-slate-600 rounded-lg px-2 py-1.5 outline-none focus:border-medical-blue cursor-pointer transition-colors hover:border-slate-400">
-                        <option value="Darija" selected>Darija</option>
-                        <option value="Tamazight">Tamazight</option>
-                        <option value="English">English</option>
-                    </select>
                     <button id="record-btn" class="relative group flex items-center justify-center w-10 h-10 rounded-full bg-medical-blue/20 text-medical-blue hover:text-white hover:bg-medical-blue border border-medical-blue/30 transition-all duration-300">
                         <span id="record-icon" class="text-lg transition-transform duration-300 group-hover:scale-110">🎤</span>
                         <!-- Voice Loader -->
@@ -189,12 +189,12 @@
     const recordBtn = document.getElementById('record-btn');
     const messagesEl = document.getElementById('messages');
     const welcomeState = document.getElementById('welcome-state');
-    const languageSelect = document.getElementById('language-select');
     
     // Model Selectors
     const modelSkinBtn = document.getElementById('model-skin-btn');
     const modelEyeBtn = document.getElementById('model-eye-btn');
     const modelAcneBtn = document.getElementById('model-acne-btn');
+    const modelDocBtn = document.getElementById('model-doc-btn');
 
     // UI State Elements
     const analyseText = document.getElementById('analyse-text');
@@ -211,30 +211,37 @@
     let selectedFile = null;
     let activeApiEndpoint = 'http://localhost:5000/predict/skin';
 
-    const baseBtnCls = "flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent";
+    const baseBtnCls = "w-full whitespace-nowrap px-3 py-2 text-sm font-medium rounded-lg transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800 border border-transparent";
     
     function resetModelButtons() {
         modelSkinBtn.className = baseBtnCls;
         modelEyeBtn.className = baseBtnCls;
         modelAcneBtn.className = baseBtnCls;
+        modelDocBtn.className = baseBtnCls;
     }
 
     modelSkinBtn.addEventListener('click', () => {
         activeApiEndpoint = 'http://localhost:5000/predict/skin';
         resetModelButtons();
-        modelSkinBtn.className = "flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all bg-medical-blue/20 text-medical-blue border border-medical-blue/30 shadow-[0_0_10px_rgba(59,130,246,0.1)]";
+        modelSkinBtn.className = "w-full whitespace-nowrap px-3 py-2 text-sm font-medium rounded-lg transition-all bg-medical-blue/20 text-medical-blue border border-medical-blue/30 shadow-[0_0_10px_rgba(59,130,246,0.1)]";
     });
 
     modelEyeBtn.addEventListener('click', () => {
         activeApiEndpoint = 'http://localhost:5000/predict/eye';
         resetModelButtons();
-        modelEyeBtn.className = "flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all bg-medical-purple/20 text-medical-purple border border-medical-purple/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]";
+        modelEyeBtn.className = "w-full whitespace-nowrap px-3 py-2 text-sm font-medium rounded-lg transition-all bg-medical-purple/20 text-medical-purple border border-medical-purple/30 shadow-[0_0_15px_rgba(139,92,246,0.1)]";
     });
 
     modelAcneBtn.addEventListener('click', () => {
         activeApiEndpoint = 'http://localhost:5000/predict/acne';
         resetModelButtons();
-        modelAcneBtn.className = "flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-all bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]";
+        modelAcneBtn.className = "w-full whitespace-nowrap px-3 py-2 text-sm font-medium rounded-lg transition-all bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]";
+    });
+
+    modelDocBtn.addEventListener('click', () => {
+        activeApiEndpoint = 'http://localhost:5000/predict/document';
+        resetModelButtons();
+        modelDocBtn.className = "w-full whitespace-nowrap px-3 py-2 text-sm font-medium rounded-lg transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]";
     });
 
     /* ── Utilities ─────────────────────────────────────── */
@@ -386,11 +393,18 @@
     });
 
     function handleFile(file) {
-        if (!file || !file.type.startsWith('image/')) return;
+        if (!file || (!file.type.startsWith('image/') && file.type !== 'application/pdf')) return;
         selectedFile = file;
         
-        const url = URL.createObjectURL(file);
-        previewImg.src = url;
+        if (file.type === 'application/pdf') {
+            // Document placeholder instead of image url
+            previewImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="150" viewBox="0 0 24 24" fill="none" stroke="%2394a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>';
+            previewImg.classList.add("p-8");
+        } else {
+            const url = URL.createObjectURL(file);
+            previewImg.src = url;
+            previewImg.classList.remove("p-8");
+        }
         fileInfoEl.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
         
         dropZone.classList.add('hidden');
@@ -433,7 +447,7 @@
             const formData = new FormData();
             formData.append('file', selectedFile);
             formData.append('session_id', sessionId);
-            formData.append('language', languageSelect.value);
+            formData.append('language', 'Auto');
 
             const res = await fetch(apiUrl, { 
                 method: 'POST', 
@@ -491,9 +505,16 @@
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
+    let globalAudioContext = null;
 
     recordBtn.addEventListener('click', async () => {
         if (!isRecording) {
+            // Barge-in feature: Stop AI voice immediately if it's currently playing!
+            if (globalAudioContext) {
+                try { globalAudioContext.close(); } catch(e) {}
+                globalAudioContext = null;
+            }
+
             // START RECORDING
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -552,7 +573,7 @@
             const formData = new FormData();
             formData.append('file', audioBlob, 'record.webm');
             formData.append('session_id', 'streaming-session'); // Forced deterministic ID for streaming demo
-            formData.append('language', languageSelect.value);
+            formData.append('language', 'Auto');
 
             const res = await fetch(apiUrl, { 
                 method: 'POST', 
@@ -566,7 +587,11 @@
             let buffer = "";
 
             let botBubbleContent = null;
+            if (globalAudioContext) {
+                try { globalAudioContext.close(); } catch(e) {}
+            }
             let audioContext = new (window.AudioContext || window.webkitAudioContext)({sampleRate: 16000});
+            globalAudioContext = audioContext;
             let nextPlayTime = 0;
 
             const playAudioChunk = async (base64Chunk) => {

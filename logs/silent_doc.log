@@ -30,3 +30,243 @@
 2026-04-12 16:43:38,805 - SilentDocAPI - INFO - Acne prediction clear (no spots)
 2026-04-12 16:44:31,178 - SilentDocAPI - INFO - Acne prediction successful for session 1776008489362
 2026-04-12 16:44:31,178 - SilentDocAPI - INFO - Acne prediction successful for session 1776008489362
+2026-04-12 17:36:49,039 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 17:36:49,039 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 17:38:09,779 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 17:38:09,779 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 17:42:52,844 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 17:42:52,844 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 17:46:42,539 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 17:46:42,539 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 18:02:56,597 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 18:02:56,597 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-12 18:03:51,510 - SilentDocAPI - INFO - Skin prediction successful for session 1776013253624
+2026-04-12 18:03:51,510 - SilentDocAPI - INFO - Skin prediction successful for session 1776013253624
+2026-04-16 15:08:26,035 - SilentDocAPI - INFO - Acne prediction successful for session 1776348475292
+2026-04-16 15:08:26,035 - SilentDocAPI - INFO - Acne prediction successful for session 1776348475292
+2026-04-16 15:09:02,318 - SilentDocAPI - INFO - Acne prediction successful for session 1776348475292
+2026-04-16 15:09:02,318 - SilentDocAPI - INFO - Acne prediction successful for session 1776348475292
+2026-04-16 15:10:06,513 - SilentDocAPI - INFO - Acne prediction successful for session 1776348475292
+2026-04-16 15:10:06,513 - SilentDocAPI - INFO - Acne prediction successful for session 1776348475292
+2026-04-16 16:47:11,566 - SilentDocAPI - INFO - Skin prediction successful for session 1776354377685
+2026-04-16 16:47:11,566 - SilentDocAPI - INFO - Skin prediction successful for session 1776354377685
+2026-04-16 16:47:36,283 - SilentDocAPI - INFO - Acne prediction successful for session 1776354440443
+2026-04-16 16:47:36,283 - SilentDocAPI - INFO - Acne prediction successful for session 1776354440443
+2026-04-16 16:48:40,335 - SilentDocAPI - INFO - Acne prediction successful for session 1776354491609
+2026-04-16 16:48:40,335 - SilentDocAPI - INFO - Acne prediction successful for session 1776354491609
+2026-04-16 16:49:30,869 - SilentDocAPI - INFO - Acne prediction successful for session 1776354491609
+2026-04-16 16:49:30,869 - SilentDocAPI - INFO - Acne prediction successful for session 1776354491609
+2026-04-16 16:49:43,897 - SilentDocAPI - INFO - Acne prediction clear (no spots)
+2026-04-16 16:49:43,897 - SilentDocAPI - INFO - Acne prediction clear (no spots)
+2026-04-16 16:50:10,025 - SilentDocAPI - INFO - Acne prediction clear (no spots)
+2026-04-16 16:50:10,025 - SilentDocAPI - INFO - Acne prediction clear (no spots)
+2026-04-17 23:26:41,610 - SilentDocAPI - INFO - Skin prediction successful for session 1776463636174
+2026-04-17 23:26:41,610 - SilentDocAPI - INFO - Skin prediction successful for session 1776463636174
+2026-04-17 23:27:02,033 - SilentDocAPI - INFO - Skin prediction successful for session 1776464802370
+2026-04-17 23:27:02,033 - SilentDocAPI - INFO - Skin prediction successful for session 1776464802370
+2026-04-17 23:27:58,202 - SilentDocAPI - INFO - Acne prediction successful for session 1776464802370
+2026-04-17 23:27:58,202 - SilentDocAPI - INFO - Acne prediction successful for session 1776464802370
+2026-04-17 23:29:31,137 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-17 23:29:31,137 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-17 23:29:48,103 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-17 23:29:48,103 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-17 23:30:30,489 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-17 23:30:30,489 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-17 23:30:53,027 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-17 23:30:53,027 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-04-17 23:31:28,300 - SilentDocAPI - INFO - Skin prediction successful for session 1776464983704
+2026-04-17 23:31:28,300 - SilentDocAPI - INFO - Skin prediction successful for session 1776464983704
+2026-04-17 23:33:38,621 - SilentDocAPI - INFO - Acne prediction successful for session 1776464983704
+2026-04-17 23:33:38,621 - SilentDocAPI - INFO - Acne prediction successful for session 1776464983704
+2026-04-23 23:25:29,390 - SilentDocAPI - ERROR - Prediction failed: The pyarrow installation is not built with support for 'dataset' (DLL load failed while importing _dataset: Une stratégie de contrôle d’application a bloqué ce fichier.)
+
+Traceback (most recent call last):
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 116, in predict_skin
+    from models.voice_model import generate_medical_advice_for_prediction
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\voice_model.py", line 15, in <module>
+    from rag.retriever import get_retriever
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\rag\retriever.py", line 4, in <module>
+    from sentence_transformers import SentenceTransformer
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\__init__.py", line 15, in <module>
+    from sentence_transformers.cross_encoder import (
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\cross_encoder\__init__.py", line 3, in <module>
+    from .CrossEncoder import CrossEncoder
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\cross_encoder\CrossEncoder.py", line 35, in <module>
+    from sentence_transformers.cross_encoder.fit_mixin import FitMixin
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\cross_encoder\fit_mixin.py", line 19, in <module>
+    from sentence_transformers.cross_encoder.training_args import CrossEncoderTrainingArguments
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\cross_encoder\training_args.py", line 3, in <module>
+    from sentence_transformers.training_args import SentenceTransformerTrainingArguments
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\training_args.py", line 14, in <module>
+    from sentence_transformers.sampler import DefaultBatchSampler, MultiDatasetDefaultBatchSampler
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\sampler.py", line 23, in <module>
+    from datasets import Dataset
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\datasets\__init__.py", line 17, in <module>
+    from .arrow_dataset import Column, Dataset
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\datasets\arrow_dataset.py", line 61, in <module>
+    import pyarrow.dataset as pds
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\pyarrow\dataset.py", line 58, in <module>
+    raise ImportError(
+ImportError: The pyarrow installation is not built with support for 'dataset' (DLL load failed while importing _dataset: Une stratégie de contrôle d’application a bloqué ce fichier.)
+
+2026-04-23 23:25:29,390 - SilentDocAPI - ERROR - Prediction failed: The pyarrow installation is not built with support for 'dataset' (DLL load failed while importing _dataset: Une stratégie de contrôle d’application a bloqué ce fichier.)
+
+Traceback (most recent call last):
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 116, in predict_skin
+    from models.voice_model import generate_medical_advice_for_prediction
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\models\voice_model.py", line 15, in <module>
+    from rag.retriever import get_retriever
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\rag\retriever.py", line 4, in <module>
+    from sentence_transformers import SentenceTransformer
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\__init__.py", line 15, in <module>
+    from sentence_transformers.cross_encoder import (
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\cross_encoder\__init__.py", line 3, in <module>
+    from .CrossEncoder import CrossEncoder
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\cross_encoder\CrossEncoder.py", line 35, in <module>
+    from sentence_transformers.cross_encoder.fit_mixin import FitMixin
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\cross_encoder\fit_mixin.py", line 19, in <module>
+    from sentence_transformers.cross_encoder.training_args import CrossEncoderTrainingArguments
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\cross_encoder\training_args.py", line 3, in <module>
+    from sentence_transformers.training_args import SentenceTransformerTrainingArguments
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\training_args.py", line 14, in <module>
+    from sentence_transformers.sampler import DefaultBatchSampler, MultiDatasetDefaultBatchSampler
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\sentence_transformers\sampler.py", line 23, in <module>
+    from datasets import Dataset
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\datasets\__init__.py", line 17, in <module>
+    from .arrow_dataset import Column, Dataset
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\datasets\arrow_dataset.py", line 61, in <module>
+    import pyarrow.dataset as pds
+  File "C:\Users\MOHAMMED\AppData\Local\Programs\Python\Python312\Lib\site-packages\pyarrow\dataset.py", line 58, in <module>
+    raise ImportError(
+ImportError: The pyarrow installation is not built with support for 'dataset' (DLL load failed while importing _dataset: Une stratégie de contrôle d’application a bloqué ce fichier.)
+
+2026-04-23 23:26:26,046 - SilentDocAPI - INFO - Skin prediction successful for session 1776983129613
+2026-04-23 23:26:26,046 - SilentDocAPI - INFO - Skin prediction successful for session 1776983129613
+2026-04-23 23:47:24,468 - SilentDocAPI - WARNING - File upload rejected: 11006977 bytes > 8MB
+2026-04-23 23:47:24,468 - SilentDocAPI - WARNING - File upload rejected: 11006977 bytes > 8MB
+2026-04-23 23:47:24,469 - SilentDocAPI - ERROR - Document Analysis failed: 413: File too large. Maximum size is 8MB.
+
+Traceback (most recent call last):
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 298, in predict_document
+    validate_file_size(doc_bytes)
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 73, in validate_file_size
+    raise HTTPException(status_code=413, detail="File too large. Maximum size is 8MB.")
+fastapi.exceptions.HTTPException: 413: File too large. Maximum size is 8MB.
+
+2026-04-23 23:47:24,469 - SilentDocAPI - ERROR - Document Analysis failed: 413: File too large. Maximum size is 8MB.
+
+Traceback (most recent call last):
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 298, in predict_document
+    validate_file_size(doc_bytes)
+  File "C:\Users\MOHAMMED\Desktop\proj\Silent-Doc\api\main.py", line 73, in validate_file_size
+    raise HTTPException(status_code=413, detail="File too large. Maximum size is 8MB.")
+fastapi.exceptions.HTTPException: 413: File too large. Maximum size is 8MB.
+
+2026-04-24 00:04:31,287 - SilentDocAPI - INFO - Analyzing medical document for session 1776985453950
+2026-04-24 00:04:31,287 - SilentDocAPI - INFO - Analyzing medical document for session 1776985453950
+2026-04-24 00:04:34,629 - SilentDocAPI - INFO - Document analysis successful for session 1776985453950
+2026-04-24 00:04:34,629 - SilentDocAPI - INFO - Document analysis successful for session 1776985453950
+2026-04-25 14:12:08,008 - SilentDocAPI - INFO - Analyzing medical document for session 1777122710905
+2026-04-25 14:12:08,008 - SilentDocAPI - INFO - Analyzing medical document for session 1777122710905
+2026-04-25 14:12:10,403 - SilentDocAPI - INFO - Document analysis successful for session 1777122710905
+2026-04-25 14:12:10,403 - SilentDocAPI - INFO - Document analysis successful for session 1777122710905
+2026-04-25 14:19:08,828 - SilentDocAPI - INFO - Analyzing medical document for session 1777122710905
+2026-04-25 14:19:08,828 - SilentDocAPI - INFO - Analyzing medical document for session 1777122710905
+2026-04-25 14:19:13,357 - SilentDocAPI - INFO - Document analysis successful for session 1777122710905
+2026-04-25 14:19:13,357 - SilentDocAPI - INFO - Document analysis successful for session 1777122710905
+2026-04-25 14:19:31,859 - SilentDocAPI - INFO - Analyzing medical document for session 1777123153986
+2026-04-25 14:19:31,859 - SilentDocAPI - INFO - Analyzing medical document for session 1777123153986
+2026-04-25 14:19:32,750 - SilentDocAPI - INFO - Document analysis successful for session 1777123153986
+2026-04-25 14:19:32,750 - SilentDocAPI - INFO - Document analysis successful for session 1777123153986
+2026-04-25 14:33:55,745 - SilentDocAPI - INFO - Analyzing medical document for session 1777123153986
+2026-04-25 14:33:55,745 - SilentDocAPI - INFO - Analyzing medical document for session 1777123153986
+2026-04-25 14:33:58,402 - SilentDocAPI - INFO - Document analysis successful for session 1777123153986
+2026-04-25 14:33:58,402 - SilentDocAPI - INFO - Document analysis successful for session 1777123153986
+2026-04-25 15:06:10,933 - SilentDocAPI - INFO - Analyzing medical document for session 1777125964243
+2026-04-25 15:06:10,933 - SilentDocAPI - INFO - Analyzing medical document for session 1777125964243
+2026-04-25 15:06:12,145 - SilentDocAPI - INFO - Document analysis successful for session 1777125964243
+2026-04-25 15:06:12,145 - SilentDocAPI - INFO - Document analysis successful for session 1777125964243
+2026-04-25 17:20:08,456 - SilentDocAPI - INFO - Analyzing medical document for session 1777125964243
+2026-04-25 17:20:08,456 - SilentDocAPI - INFO - Analyzing medical document for session 1777125964243
+2026-04-25 17:20:10,166 - SilentDocAPI - INFO - Document analysis successful for session 1777125964243
+2026-04-25 17:20:10,166 - SilentDocAPI - INFO - Document analysis successful for session 1777125964243
+2026-04-25 17:24:54,784 - SilentDocAPI - INFO - Skin prediction successful for session 1777134237381
+2026-04-25 17:24:54,784 - SilentDocAPI - INFO - Skin prediction successful for session 1777134237381
+2026-04-25 17:25:14,981 - SilentDocAPI - INFO - Analyzing medical document for session 1777134294930
+2026-04-25 17:25:14,981 - SilentDocAPI - INFO - Analyzing medical document for session 1777134294930
+2026-04-25 17:25:17,497 - SilentDocAPI - INFO - Document analysis successful for session 1777134294930
+2026-04-25 17:25:17,497 - SilentDocAPI - INFO - Document analysis successful for session 1777134294930
+2026-04-25 17:25:44,269 - SilentDocAPI - INFO - Analyzing medical document for session 1777134294930
+2026-04-25 17:25:44,269 - SilentDocAPI - INFO - Analyzing medical document for session 1777134294930
+2026-04-25 17:25:45,124 - SilentDocAPI - INFO - Document analysis successful for session 1777134294930
+2026-04-25 17:25:45,124 - SilentDocAPI - INFO - Document analysis successful for session 1777134294930
+2026-04-25 17:43:02,221 - SilentDocAPI - INFO - Analyzing medical document for session 1777135363013
+2026-04-25 17:43:02,221 - SilentDocAPI - INFO - Analyzing medical document for session 1777135363013
+2026-04-25 17:43:05,842 - SilentDocAPI - INFO - Document analysis successful for session 1777135363013
+2026-04-25 17:43:05,842 - SilentDocAPI - INFO - Document analysis successful for session 1777135363013
+2026-05-06 16:37:26,488 - SilentDocAPI - INFO - Acne prediction clear (no spots)
+2026-05-06 16:37:26,488 - SilentDocAPI - INFO - Acne prediction clear (no spots)
+2026-05-06 16:38:18,989 - SilentDocAPI - INFO - Acne prediction successful for session 1778079474645
+2026-05-06 16:38:18,989 - SilentDocAPI - INFO - Acne prediction successful for session 1778079474645
+2026-05-06 16:39:16,818 - SilentDocAPI - INFO - Acne prediction successful for session 1778079474645
+2026-05-06 16:39:16,818 - SilentDocAPI - INFO - Acne prediction successful for session 1778079474645
+2026-05-06 16:40:32,954 - SilentDocAPI - INFO - Skin prediction successful for session 1778082002549
+2026-05-06 16:40:32,954 - SilentDocAPI - INFO - Skin prediction successful for session 1778082002549
+2026-05-06 16:40:59,100 - SilentDocAPI - INFO - Acne prediction successful for session 1778082040477
+2026-05-06 16:40:59,100 - SilentDocAPI - INFO - Acne prediction successful for session 1778082040477
+2026-05-06 16:42:51,563 - SilentDocAPI - INFO - Acne prediction successful for session 1778082040477
+2026-05-06 16:42:51,563 - SilentDocAPI - INFO - Acne prediction successful for session 1778082040477
+2026-05-07 18:23:16,638 - SilentDocAPI - INFO - Skin prediction successful for session 1778174529764
+2026-05-07 18:23:16,638 - SilentDocAPI - INFO - Skin prediction successful for session 1778174529764
+2026-05-07 18:25:14,058 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-07 18:25:14,058 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-07 19:33:09,606 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-07 19:33:09,606 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-07 19:46:11,901 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-07 19:46:11,901 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-07 19:47:24,508 - SilentDocAPI - INFO - Skin prediction successful for session 1778179556608
+2026-05-07 19:47:24,508 - SilentDocAPI - INFO - Skin prediction successful for session 1778179556608
+2026-05-07 19:49:20,236 - SilentDocAPI - INFO - Skin prediction successful for session 1778179746713
+2026-05-07 19:49:20,236 - SilentDocAPI - INFO - Skin prediction successful for session 1778179746713
+2026-05-09 15:23:13,786 - SilentDocAPI - INFO - Skin prediction successful for session 1778336553955
+2026-05-09 15:23:13,786 - SilentDocAPI - INFO - Skin prediction successful for session 1778336553955
+2026-05-09 17:59:20,500 - SilentDocAPI - INFO - Skin prediction successful for session 1778339105193
+2026-05-09 17:59:20,500 - SilentDocAPI - INFO - Skin prediction successful for session 1778339105193
+2026-05-09 18:17:16,533 - SilentDocAPI - INFO - Skin prediction successful for session 1778347015972
+2026-05-09 18:17:16,533 - SilentDocAPI - INFO - Skin prediction successful for session 1778347015972
+2026-05-09 18:19:28,230 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:19:28,230 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:23:32,773 - SilentDocAPI - INFO - Skin prediction successful for session 1778347324105
+2026-05-09 18:23:32,773 - SilentDocAPI - INFO - Skin prediction successful for session 1778347324105
+2026-05-09 18:27:12,205 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:27:12,205 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:28:37,359 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:28:37,359 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:29:59,002 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:29:59,002 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:30:48,139 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:30:48,139 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:35:18,423 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:35:18,423 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:35:56,902 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:35:56,902 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:39:43,869 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:39:43,869 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:43:42,326 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:43:42,326 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:44:23,819 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:44:23,819 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:45:33,686 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:45:33,686 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:46:26,299 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:46:26,299 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:51:08,369 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:51:08,369 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:51:26,598 - SilentDocAPI - INFO - Skin prediction successful for session 1778349064605
+2026-05-09 18:51:26,598 - SilentDocAPI - INFO - Skin prediction successful for session 1778349064605
+2026-05-09 18:51:44,013 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:51:44,013 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:52:11,250 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:52:11,250 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:52:48,285 - SilentDocAPI - INFO - Starting voice stream for session streaming-session
+2026-05-09 18:52:48,285 - SilentDocAPI - INFO - Starting voice stream for session streaming-session

@@ -66,11 +66,11 @@ def verify_api_key(api_key: str = Security(api_key_header)):
         raise HTTPException(status_code=403, detail="Could not validate API credentials")
     return api_key
 
-MAX_FILE_SIZE = 8 * 1024 * 1024 # 8MB
+MAX_FILE_SIZE = 50 * 1024 * 1024 # 50MB
 def validate_file_size(file_bytes: bytes):
     if len(file_bytes) > MAX_FILE_SIZE:
-        logger.warning(f"File upload rejected: {len(file_bytes)} bytes > 8MB")
-        raise HTTPException(status_code=413, detail="File too large. Maximum size is 8MB.")
+        logger.warning(f"File upload rejected: {len(file_bytes)} bytes > 50MB")
+        raise HTTPException(status_code=413, detail="File too large. Maximum size is 50MB.")
 # --------------------------------------------------
 
 # Mount the static web interface
@@ -224,9 +224,10 @@ async def predict_acne(request: Request, file: UploadFile = File(...), session_i
             conf = p.get("confidence", 0)
             class_name = str(p.get("class", "")).lower()
             
-            # Accept ANY spot that has confidence >= 0.15, regardless of the class name, 
-            # but we explicitly log the specific subclass detected for debugging.
-            if conf >= 0.15:
+            # Accept ANY spot that has confidence >= 0.05 (5%).
+            # Lowered from 0.15 → 0.05 to maximize sensitivity and catch more subtle acne spots.
+            # Raise this value if you want fewer (higher-confidence) detections only.
+            if conf >= 0.05:
                 print(f"Detected valid acne spot -> Class: {class_name}, Confidence: {conf}")
                 valid_spots += 1
                 x = p["x"]
@@ -279,6 +280,37 @@ async def predict_acne(request: Request, file: UploadFile = File(...), session_i
     return JSONResponse({
         "predictions": results,
         "heatmap_base64": heatmap_b64,
+        "advice_text": advice_data["advice_text"],
+        "advice_audio_base64": advice_data["advice_audio_base64"],
+        "disclaimer": "⚠️ MEDICAL DISCLAIMER: This AI is a diagnostic aid only and is NOT a substitute for professional medical advice."
+    })
+
+
+@app.post("/predict/document")
+@limiter.limit("10/minute")
+async def predict_document(request: Request, file: UploadFile = File(...), session_id: str = Form("default"), language: str = Form("Darija"), api_key: str = Depends(verify_api_key)):
+    """Document Analysis endpoint with limit & auth"""
+    if not (file.content_type.startswith("image/") or file.content_type == "application/pdf"):
+        raise HTTPException(status_code=400, detail="Only image and PDF files are accepted.")
+    
+    try:
+        doc_bytes = await file.read()
+        validate_file_size(doc_bytes)
+        
+        from models.voice_model import analyze_medical_document
+        logger.info(f"Analyzing medical document for session {session_id}")
+        advice_data = analyze_medical_document(doc_bytes, file.content_type, session_id=session_id, language=language)
+            
+    except Exception as e:
+        import traceback
+        err_str = traceback.format_exc()
+        logger.error(f"Document Analysis failed: {str(e)}\n\n{err_str}")
+        raise HTTPException(status_code=500, detail=f"Document Analysis failed: {str(e)}")
+
+    logger.info(f"Document analysis successful for session {session_id}")
+    return JSONResponse({
+        "predictions": [{"label": "Document Processed", "confidence": 100.0, "rank": 1}],
+        "heatmap_base64": "",
         "advice_text": advice_data["advice_text"],
         "advice_audio_base64": advice_data["advice_audio_base64"],
         "disclaimer": "⚠️ MEDICAL DISCLAIMER: This AI is a diagnostic aid only and is NOT a substitute for professional medical advice."
