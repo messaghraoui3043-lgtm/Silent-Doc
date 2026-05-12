@@ -1,3 +1,6 @@
+rag/chroma_db/chroma.sqlite3 filter=lfs diff=lfs merge=lfs -text
+rag/chroma_db/**/*.bin filter=lfs diff=lfs merge=lfs -text
+rag/moroccan_medical_brain.index filter=lfs diff=lfs merge=lfs -text
 /ffmpeg.exe filter=lfs diff=lfs merge=lfs -text
 /rag/chroma_db/5876bf02-fe1e-4948-870f-43f1d63222db/data_level0.bin filter=lfs diff=lfs merge=lfs -text
 /rag/chroma_db/chroma.sqlite3 filter=lfs diff=lfs merge=lfs -text
