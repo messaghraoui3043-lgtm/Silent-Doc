@@ -85,6 +85,37 @@ def serve_index(request: Request):
     with open(html_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
+@app.get("/admin")
+@limiter.limit("30/minute")
+def serve_admin(request: Request):
+    html_path = os.path.join(root_dir, "web", "admin.html")
+    with open(html_path, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+@app.post("/admin/upload")
+@limiter.limit("10/minute")
+async def admin_upload(request: Request, file: UploadFile = File(...), api_key: str = Depends(verify_api_key)):
+    """Admin route to securely upload documents for RAG ingestion"""
+    allowed_extensions = [".txt", ".md", ".pdf"]
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail="Only .txt, .md, and .pdf files are accepted.")
+        
+    try:
+        upload_dir = os.path.join(root_dir, "rag", "auto_upload")
+        os.makedirs(upload_dir, exist_ok=True)
+        file_path = os.path.join(upload_dir, file.filename)
+        
+        file_bytes = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(file_bytes)
+            
+        return {"status": "success", "message": f"File {file.filename} uploaded successfully. Watcher will process it shortly."}
+    except Exception as e:
+        logger.error(f"Upload failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/predict/skin")
 @limiter.limit("10/minute")
 async def predict_skin(request: Request, file: UploadFile = File(...), session_id: str = Form("default"), language: str = Form("Darija"), api_key: str = Depends(verify_api_key)):

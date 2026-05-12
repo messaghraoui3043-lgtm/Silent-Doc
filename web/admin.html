@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Doctor – Admin RAG Upload</title>
+    <!-- Inline SVG favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        medical: {
+                            superdark: '#0B1121',
+                            dark: '#151E32',
+                            card: '#1C263D',
+                            blue: '#3B82F6',
+                            purple: '#8B5CF6',
+                            accent: '#6366F1'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(28, 38, 61, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.02);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-medical-superdark text-slate-200 min-h-screen flex flex-col font-sans selection:bg-medical-purple selection:text-white items-center justify-center p-4">
+
+<main class="w-full max-w-lg glass-panel rounded-2xl p-8 shadow-2xl flex flex-col gap-6 relative overflow-hidden">
+    <!-- Decorative background glow -->
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-medical-blue via-medical-purple to-medical-blue"></div>
+    <div class="absolute -top-20 -right-20 w-40 h-40 bg-medical-purple rounded-full mix-blend-screen filter blur-[80px] opacity-30"></div>
+    <div class="absolute -bottom-20 -left-20 w-40 h-40 bg-medical-blue rounded-full mix-blend-screen filter blur-[80px] opacity-30"></div>
+
+    <div class="text-center z-10">
+        <div class="w-14 h-14 mx-auto rounded-xl bg-gradient-to-tr from-medical-blue to-medical-purple flex items-center justify-center text-3xl shadow-lg shadow-medical-purple/20 mb-4">
+            ⚙️
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-white mb-1">RAG Knowledge Injection</h1>
+        <p class="text-sm text-slate-400">Securely upload medical context for the AI Doctor.</p>
+    </div>
+
+    <!-- API Key Input -->
+    <div class="z-10">
+        <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2">Admin API Key</label>
+        <input type="password" id="api-key" placeholder="Enter X-API-Key..." value="silent-doc-dev-key" class="w-full bg-slate-900/50 border border-slate-700 text-slate-300 text-sm rounded-xl px-4 py-3 outline-none focus:border-medical-blue focus:ring-1 focus:ring-medical-blue transition-all" />
+    </div>
+
+    <!-- File Dropzone -->
+    <div class="z-10 flex flex-col gap-2">
+        <label class="block text-xs font-semibold tracking-wider text-slate-400 uppercase">Medical Document (.txt, .md, .pdf)</label>
+        <div id="drop-zone" class="border-2 border-dashed border-slate-600 rounded-xl p-10 flex flex-col items-center justify-center cursor-pointer hover:border-medical-purple hover:bg-medical-purple/5 transition-all duration-300 group bg-slate-900/30">
+            <div class="text-4xl mb-3 group-hover:scale-110 transition-transform duration-300">📄</div>
+            <p class="text-sm text-center text-slate-400" id="file-name-display">
+                <span class="font-semibold text-medical-purple transition-colors">Click to browse</span> or drag & drop<br>
+            </p>
+            <input type="file" id="file-input" accept=".txt,.md,.pdf" class="hidden" />
+        </div>
+    </div>
+
+    <!-- Upload Action -->
+    <button id="upload-btn" disabled class="z-10 w-full relative flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-medical-blue to-medical-purple text-white font-semibold transition-all duration-300 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-medical-blue/20">
+        <span id="upload-icon">🚀</span>
+        <span id="upload-text">Upload to Auto-Watcher</span>
+        <svg id="upload-loader" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+    </button>
+
+    <!-- Notification Area -->
+    <div id="notification" class="hidden z-10 text-center text-sm p-3 rounded-lg font-medium"></div>
+
+</main>
+
+<script>
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const uploadBtn = document.getElementById('upload-btn');
+    const apiKeyInput = document.getElementById('api-key');
+    const notification = document.getElementById('notification');
+
+    const uploadIcon = document.getElementById('upload-icon');
+    const uploadText = document.getElementById('upload-text');
+    const uploadLoader = document.getElementById('upload-loader');
+
+    let selectedFile = null;
+
+    // Trigger file input
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Drag and Drop events
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.add('border-medical-purple', 'bg-medical-purple/10'));
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, () => dropZone.classList.remove('border-medical-purple', 'bg-medical-purple/10'));
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+    });
+
+    fileInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+
+    function handleFiles(files) {
+        if (files.length > 0) {
+            selectedFile = files[0];
+            
+            // Validate extension
+            const ext = selectedFile.name.split('.').pop().toLowerCase();
+            if (!['txt', 'md', 'pdf'].includes(ext)) {
+                showNotification("Error: Only .txt, .md, and .pdf files are allowed.", "error");
+                selectedFile = null;
+                uploadBtn.disabled = true;
+                fileNameDisplay.innerHTML = `<span class="font-semibold text-medical-purple">Click to browse</span> or drag & drop`;
+                return;
+            }
+
+            fileNameDisplay.innerHTML = `<span class="text-medical-blue font-semibold">${selectedFile.name}</span><br><span class="text-xs opacity-70">${(selectedFile.size / 1024).toFixed(1)} KB</span>`;
+            uploadBtn.disabled = false;
+            hideNotification();
+        }
+    }
+
+    uploadBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+
+        // UI Loading State
+        uploadBtn.disabled = true;
+        uploadIcon.classList.add('hidden');
+        uploadText.textContent = "Uploading...";
+        uploadLoader.classList.remove('hidden');
+        hideNotification();
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        try {
+            const res = await fetch('/admin/upload', {
+                method: 'POST',
+                headers: {
+                    'X-API-Key': apiKeyInput.value
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.detail || "Server error during upload.");
+            }
+
+            showNotification(data.message, "success");
+            
+            // Reset state
+            selectedFile = null;
+            fileNameDisplay.innerHTML = `<span class="font-semibold text-medical-purple">Click to browse</span> or drag & drop`;
+
+        } catch (err) {
+            showNotification(err.message, "error");
+            uploadBtn.disabled = false;
+        } finally {
+            // Restore UI
+            if(!selectedFile) uploadBtn.disabled = true;
+            uploadIcon.classList.remove('hidden');
+            uploadText.textContent = "Upload to Auto-Watcher";
+            uploadLoader.classList.add('hidden');
+        }
+    });
+
+    function showNotification(message, type) {
+        notification.classList.remove('hidden', 'bg-red-500/20', 'text-red-400', 'border-red-500/30', 'bg-emerald-500/20', 'text-emerald-400', 'border-emerald-500/30');
+        
+        if (type === "error") {
+            notification.classList.add('bg-red-500/20', 'text-red-400', 'border', 'border-red-500/30');
+        } else {
+            notification.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border', 'border-emerald-500/30');
+        }
+        
+        notification.textContent = message;
+    }
+
+    function hideNotification() {
+        notification.classList.add('hidden');
+    }
+</script>
+
+</body>
+</html>
